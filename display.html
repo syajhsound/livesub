@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>畢業典禮現場大螢幕</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.8s ease-in-out;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        .subtitle-container {
+            position: absolute;
+            bottom: 12%; /* 微調高度 */
+            left: 5%;
+            width: 90%;
+            text-align: center;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.95), 0 2px 5px rgba(0, 0, 0, 0.9);
+            z-index: 10;
+        }
+
+        .speaker-tag {
+            font-size: 28px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 15px;
+            font-weight: 500;
+            letter-spacing: 2px;
+        }
+
+        .main-text {
+            /* font-size 改由 JavaScript 動態控制 */
+            font-weight: bold;
+            color: #ffffff;
+            line-height: 1.4;
+            letter-spacing: 3px;
+            display: inline-block;
+        }
+
+        .anim-fade { animation: fadeIn 0.4s forwards; }
+        .anim-slide { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="subtitle-container">
+        <div class="speaker-tag" id="liveSpeaker"></div>
+        <div class="main-text" id="liveText">歡迎蒞臨畢業典禮</div>
+    </div>
+
+    <script>
+        const channel = new BroadcastChannel('ceremony_subtitles');
+        const liveSpeaker = document.getElementById('liveSpeaker');
+        const liveText = document.getElementById('liveText');
+
+        channel.onmessage = function(event) {
+            const { type, data } = event.data;
+
+            if (type === 'UPDATE_SUBTITLE') {
+                liveText.classList.remove('anim-fade', 'anim-slide');
+                liveSpeaker.classList.remove('anim-fade', 'anim-slide');
+                
+                void liveText.offsetWidth; 
+
+                // 1. 更新內文與講者
+                liveSpeaker.innerText = data.speaker ? `【 ${data.speaker} 】` : '';
+                liveText.innerText = data.text;
+                
+                // 2. 更新顏色與「字體大小（px）」
+                liveText.style.color = data.color;
+                liveText.style.fontSize = (data.size || 56) + 'px'; 
+
+                // 3. 套用動畫
+                if (data.animation === 'fade') {
+                    liveText.classList.add('anim-fade');
+                    liveSpeaker.classList.add('anim-fade');
+                } else if (data.animation === 'slide') {
+                    liveText.classList.add('anim-slide');
+                    liveSpeaker.classList.add('anim-slide');
+                }
+
+            } else if (type === 'CLEAR') {
+                liveSpeaker.innerText = '';
+                liveText.innerText = '';
+            } else if (type === 'UPDATE_BG') {
+                document.body.style.backgroundImage = `url('${data}')`;
+            }
+        };
+    </script>
+</body>
+</html>
