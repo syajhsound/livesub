@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>畢業典禮現場大螢幕</title>
+    <title>典禮字幕現場大螢幕</title>
     <style>
         body, html {
             margin: 0;
@@ -21,7 +21,7 @@
 
         .subtitle-container {
             position: absolute;
-            bottom: 12%; /* 微調高度 */
+            bottom: 12%;
             left: 5%;
             width: 90%;
             text-align: center;
@@ -38,7 +38,6 @@
         }
 
         .main-text {
-            /* font-size 改由 JavaScript 動態控制 */
             font-weight: bold;
             color: #ffffff;
             line-height: 1.4;
@@ -74,15 +73,12 @@
                 
                 void liveText.offsetWidth; 
 
-                // 1. 更新內文與講者
                 liveSpeaker.innerText = data.speaker ? `【 ${data.speaker} 】` : '';
                 liveText.innerText = data.text;
                 
-                // 2. 更新顏色與「字體大小（px）」
                 liveText.style.color = data.color;
                 liveText.style.fontSize = (data.size || 56) + 'px'; 
 
-                // 3. 套用動畫
                 if (data.animation === 'fade') {
                     liveText.classList.add('anim-fade');
                     liveSpeaker.classList.add('anim-fade');
