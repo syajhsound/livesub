@@ -10,6 +10,7 @@
             --glass-border: rgba(255, 255, 255, 0.2);
             --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
             --text-color: #ffffff;
+            --accent-color: #007aff;
         }
 
         body {
@@ -41,7 +42,7 @@
             font-size: 14px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
-            z-index: 99999 !important; /* 確保選單在最上層，可被點擊 */
+            z-index: 99999 !important;
         }
 
         .menu-left { 
@@ -59,7 +60,7 @@
             border-radius: 4px; 
             user-select: none;
         }
-        .menu-item:hover { background: rgba(255, 255, 255, 0.15); }
+        .menu-item:hover, .menu-item.show { background: rgba(255, 255, 255, 0.15); }
 
         /* macOS 下拉選單 */
         .dropdown-menu {
@@ -73,11 +74,14 @@
             border: 1px solid rgba(255,255,255,0.15);
             border-radius: 6px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-            min-width: 180px;
+            min-width: 200px;
             padding: 5px 0;
             margin: 0;
-            z-index: 100001 !important; /* 確保選單展開時不被內文遮擋 */
+            z-index: 100001 !important;
         }
+        
+        .menu-item.show .dropdown-menu { display: block; }
+
         .dropdown-menu li {
             list-style: none;
             padding: 6px 15px;
@@ -85,8 +89,9 @@
             color: #fff;
             cursor: pointer;
         }
-        .dropdown-menu li:hover { background: #007aff; }
-        .menu-item:hover .dropdown-menu { display: block; }
+        .dropdown-menu li:hover { background: var(--accent-color); }
+        .dropdown-menu .menu-divider { height: 1px; background: rgba(255,255,255,0.15); margin: 4px 0; }
+        .dropdown-menu .menu-action { color: #a5b4fc; font-weight: 500; }
 
         /* 當前場景標示 */
         #currentSceneDisplay {
@@ -134,6 +139,21 @@
             display: flex; align-items: center; justify-content: space-between;
         }
 
+        /* ✨ CSS Button 講者標籤樣式 */
+        .speaker-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
+            border: 1px solid rgba(147, 51, 234, 0.4);
+            color: #e0e7ff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 6px;
+        }
+
         /* Modal */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -149,8 +169,9 @@
         .form-group { display: flex; flex-direction: column; gap: 5px; }
         .form-group input, .form-group select {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            padding: 10px; border-radius: 8px; color: white; outline: none;
+            padding: 10px; border-radius: 8px; color: white; outline: none; font-size: 14px;
         }
+        .form-group select option { background: #222; color: #fff; }
 
         .modal-preview-box {
             background: #000; border-radius: 8px; padding: 15px;
@@ -162,25 +183,22 @@
 
     <div class="menu-bar">
         <div class="menu-left">
-            <div style="font-weight: bold; user-select: none;"> 典禮字幕控制後台</div>
+            <div style="font-weight: bold; user-select: none; margin-right: 10px;"> 典禮字幕控制後台</div>
             
-            <div class="menu-item">檔案
+            <div class="menu-item" onclick="toggleMenu(event, this)">檔案
                 <ul class="dropdown-menu">
                     <li onclick="exportProject()">匯出專案資料 (.json)</li>
                     <li onclick="document.getElementById('importFile').click()">匯入專案資料...</li>
                 </ul>
             </div>
 
-            <div class="menu-item">使用場景
+            <div class="menu-item" onclick="toggleMenu(event, this)">使用場景
                 <ul class="dropdown-menu" id="sceneDropdown">
-                    <li onclick="switchScene('場景 A：畢業生致詞')">場景 A：畢業生致詞</li>
-                    <li onclick="switchScene('場景 B：在校生致詞')">場景 B：在校生致詞</li>
-                    <li onclick="switchScene('場景 C：校長及貴賓致詞')">場景 C：校長及貴賓致詞</li>
-                </ul>
+                    </ul>
             </div>
         </div>
         <div>
-            <span id="currentSceneDisplay">目前場景：畢業生致詞</span>
+            <span id="currentSceneDisplay">目前場景：未載入</span>
         </div>
     </div>
 
@@ -209,10 +227,13 @@
                     <label>字幕內容</label>
                     <input type="text" id="subText" placeholder="請輸入字幕..." oninput="updateLivePreview()">
                 </div>
+                
                 <div class="form-group">
                     <label>講者標籤</label>
-                    <input type="text" id="subSpeaker" placeholder="例如：畢業生代表" oninput="updateLivePreview()">
+                    <select id="subSpeakerSelect" onchange="handleSpeakerSelectChange()">
+                        </select>
                 </div>
+
                 <div style="display:flex; gap:10px;">
                     <div class="form-group" style="flex:1;">
                         <label>顏色</label>
@@ -240,7 +261,7 @@
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
                     <button class="btn" onclick="closeModal()">取消</button>
-                    <button class="btn" style="background:#007aff; border-color:#007aff;" onclick="saveSubtitle()">儲存</button>
+                    <button class="btn" style="background:var(--accent-color); border-color:var(--accent-color);" onclick="saveSubtitle()">儲存</button>
                 </div>
             </div>
         </div>
@@ -249,8 +270,10 @@
     <script>
         const channel = new BroadcastChannel('ceremony_subtitles');
         
+        // 資料庫結構擴充：新增預設講者標籤清單
         let projectData = JSON.parse(localStorage.getItem('ceremony_project')) || {
             currentScene: "場景 A：畢業生致詞",
+            speakers: ["無標籤", "畢業生代表", "在校生代表", "校長", "家長會長", "特別貴賓"],
             scenes: {
                 "場景 A：畢業生致詞": [
                     { id: 1, text: "親愛的師長、同學們，大家平安。", speaker: "畢業生代表", color: "#ffffff", size: "56", animation: "slide" }
@@ -264,10 +287,118 @@
 
         let editId = null;
 
+        // MenuBar 開關邏輯
+        function toggleMenu(event, element) {
+            event.stopPropagation();
+            const isShown = element.classList.contains('show');
+            closeAllMenus();
+            if (!isShown) {
+                element.classList.add('show');
+            }
+        }
+
+        function closeAllMenus() {
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('show');
+            });
+        }
+
+        document.addEventListener('click', function() {
+            closeAllMenus();
+        });
+
         function saveToStorage() {
             localStorage.setItem('ceremony_project', JSON.stringify(projectData));
         }
 
+        // 渲染 MenuBar 的場景下拉清單
+        function renderSceneMenu() {
+            const dropdown = document.getElementById('sceneDropdown');
+            dropdown.innerHTML = '';
+
+            // 渲染所有現有場景
+            Object.keys(projectData.scenes).forEach(sceneName => {
+                const li = document.createElement('li');
+                li.innerText = sceneName;
+                li.onclick = () => switchScene(sceneName);
+                dropdown.appendChild(li);
+            });
+
+            // 分隔線與「新增自訂場景」按鈕
+            const divider = document.createElement('div');
+            divider.className = 'menu-divider';
+            dropdown.appendChild(divider);
+
+            const addLi = document.createElement('li');
+            addLi.className = 'menu-action';
+            addLi.innerText = '＋ 新增自訂場景...';
+            addLi.onclick = (e) => {
+                e.stopPropagation();
+                addNewScene();
+            };
+            dropdown.appendChild(addLi);
+        }
+
+        // 新增自訂場景
+        function addNewScene() {
+            const newSceneName = prompt('請輸入新場景名稱（例如：場景 D：頒獎典禮）：');
+            if (!newSceneName || newSceneName.trim() === '') return;
+            
+            if (projectData.scenes[newSceneName]) {
+                alert('此場景名稱已存在！');
+                return;
+            }
+
+            // 初始化新場景的空陣列
+            projectData.scenes[newSceneName] = [];
+            projectData.currentScene = newSceneName; // 直接切換到新場景
+            
+            saveToStorage();
+            renderSceneMenu();
+            renderList();
+            closeAllMenus();
+        }
+
+        // 填滿彈出視窗中的講者下拉選單
+        function populateSpeakerSelect() {
+            const select = document.getElementById('subSpeakerSelect');
+            select.innerHTML = '';
+
+            projectData.speakers.forEach(speaker => {
+                const opt = document.createElement('option');
+                opt.value = speaker;
+                opt.innerText = speaker;
+                select.appendChild(opt);
+            });
+
+            // 新增一個動態的自訂選項
+            const optAdd = document.createElement('option');
+            optAdd.value = "__ADD_NEW__";
+            optAdd.innerText = "＋ 新增自訂標籤...";
+            optAdd.style.color = "#a5b4fc";
+            select.appendChild(optAdd);
+        }
+
+        // 處理講者下拉選單變更（偵測是否點選了「新增」）
+        function handleSpeakerSelectChange() {
+            const select = document.getElementById('subSpeakerSelect');
+            if (select.value === "__ADD_NEW__") {
+                const newSpeaker = prompt('請輸入新講者標籤名稱：');
+                if (newSpeaker && newSpeaker.trim() !== '') {
+                    if (!projectData.speakers.includes(newSpeaker)) {
+                        projectData.speakers.push(newSpeaker);
+                        saveToStorage();
+                    }
+                    populateSpeakerSelect();
+                    select.value = newSpeaker; // 自動選取剛剛新增的標籤
+                } else {
+                    select.value = "無標籤"; // 取消則切回預設
+                }
+            }
+            updateLivePreview();
+        }
+
+        // 渲染主列表面版（含升級版 CSS Button 標籤）
         function renderList() {
             document.getElementById('currentSceneDisplay').innerText = `目前場景：${projectData.currentScene}`;
             const listEl = document.getElementById('subtitleList');
@@ -278,10 +409,16 @@
             currentSubtitles.forEach((sub, index) => {
                 const item = document.createElement('div');
                 item.className = 'subtitle-item';
+                
+                // 講者標籤渲染為精緻的 CSS 膠囊 Button 外觀
+                const speakerDisplay = (sub.speaker && sub.speaker !== "無標籤") 
+                    ? `<div class="speaker-badge">👤 ${sub.speaker}</div>` 
+                    : `<div class="speaker-badge" style="background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.4)">無標籤</div>`;
+
                 item.innerHTML = `
                     <div>
-                        <small style="color:rgba(255,255,255,0.5)">[${sub.speaker || '無標籤'}] (${sub.size}px)</small>
-                        <div style="color:${sub.color}; font-size:18px; margin-top:4px;">${sub.text}</div>
+                        ${speakerDisplay}
+                        <div style="color:${sub.color}; font-size:18px; font-weight:500;">${sub.text}</div>
                     </div>
                     <div>
                         <button class="btn btn-live" onclick="sendToLive(${index})">放送</button>
@@ -303,7 +440,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `畢業典禮字幕專案_${projectData.currentScene}.json`);
+            downloadAnchor.setAttribute("download", `典禮字幕專案_${projectData.currentScene}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -317,12 +454,15 @@
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (parsed.scenes && parsed.currentScene) {
+                        // 相容舊版本專案，若無 speakers 清單則補上預設
+                        if(!parsed.speakers) parsed.speakers = ["無標籤", "畢業生代表", "在校生代表", "校長"];
                         projectData = parsed;
                         saveToStorage();
+                        renderSceneMenu();
                         renderList();
                         alert('專案匯入成功！');
                     } else {
-                        alert('檔案格式不正確，非有效的字幕專案檔。');
+                        alert('檔案格式不正確。');
                     }
                 } catch (err) {
                     alert('讀取檔案失敗。');
@@ -333,12 +473,12 @@
 
         function updateLivePreview() {
             const text = document.getElementById('subText').value || "（請輸入文字）";
-            const speaker = document.getElementById('subSpeaker').value;
+            const speaker = document.getElementById('subSpeakerSelect').value;
             const color = document.getElementById('subColor').value;
             const size = document.getElementById('subSize').value;
 
             document.getElementById('fontSizeVal').innerText = size;
-            document.getElementById('preSpeaker').innerText = speaker ? `【 ${speaker} 】` : '';
+            document.getElementById('preSpeaker').innerText = (speaker && speaker !== "無標籤") ? `【 ${speaker} 】` : '';
             document.getElementById('preText').innerText = text;
             document.getElementById('preText').style.color = color;
             document.getElementById('preText').style.fontSize = (size * 0.45) + 'px';
@@ -346,9 +486,10 @@
 
         function openModal() {
             editId = null;
+            populateSpeakerSelect();
             document.getElementById('modalTitle').innerText = "新增字幕項目";
             document.getElementById('subText').value = "";
-            document.getElementById('subSpeaker').value = "";
+            document.getElementById('subSpeakerSelect').value = "無標籤";
             document.getElementById('subColor').value = "#ffffff";
             document.getElementById('subSize').value = "56";
             document.getElementById('subAnimation').value = "none";
@@ -360,7 +501,7 @@
 
         function saveSubtitle() {
             const text = document.getElementById('subText').value;
-            const speaker = document.getElementById('subSpeaker').value;
+            const speaker = document.getElementById('subSpeakerSelect').value;
             const color = document.getElementById('subColor').value;
             const size = document.getElementById('subSize').value;
             const animation = document.getElementById('subAnimation').value;
@@ -385,9 +526,17 @@
             const currentSubtitles = projectData.scenes[projectData.currentScene];
             const sub = currentSubtitles.find(s => s.id === id);
             editId = id;
+            
+            populateSpeakerSelect();
+            // 如果專案內的標籤不在目前選單內，就塞進去（防止匯入不一致）
+            if(!projectData.speakers.includes(sub.speaker)){
+                projectData.speakers.push(sub.speaker);
+                populateSpeakerSelect();
+            }
+
             document.getElementById('modalTitle').innerText = "編輯字幕項目";
             document.getElementById('subText').value = sub.text;
-            document.getElementById('subSpeaker').value = sub.speaker;
+            document.getElementById('subSpeakerSelect').value = sub.speaker || "無標籤";
             document.getElementById('subColor').value = sub.color;
             document.getElementById('subSize').value = sub.size;
             document.getElementById('subAnimation').value = sub.animation;
@@ -421,6 +570,8 @@
             }
         }
 
+        // 初始化載入
+        renderSceneMenu();
         renderList();
     </script>
 </body>
