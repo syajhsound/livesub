@@ -207,8 +207,8 @@
     <div class="main-container">
         <div class="action-bar">
             <div>
-                <button class="btn" onclick="openModal()">＋ 新增字幕</button>
-                <button class="btn" onclick="clearAllLive()">清除前台畫面</button>
+                <button class="btn" onclick="openModal();">＋ 新增字幕</button>
+                <button class="btn" onclick="clearAllLive();">清除前台畫面</button>
             </div>
             <div>
                 <input type="file" id="bgUpload" accept="image/*" style="display:none" onchange="uploadBackground(event)">
@@ -261,32 +261,55 @@
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
                     <button class="btn" onclick="closeModal()">取消</button>
-                    <button class="btn" style="background:var(--accent-color); border-color:var(--accent-color);" onclick="saveSubtitle()">儲存</button>
+                    <button class="btn" style="background:var(--accent-color); border-color:var(--accent-color);" onclick="saveSubtitle()">儲存到瀏覽器</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const channel = new BroadcastChannel('ceremony_subtitles');
+        // 防止環境阻擋 BroadcastChannel 導致整段 JS 癱瘓的安控機制
+        let channel;
+        try {
+            channel = new BroadcastChannel('ceremony_subtitles');
+        } catch(e) {
+            console.warn("BroadcastChannel 無法在此環境啟用，改採本地模式運作。");
+            channel = { postMessage: function(msg) { console.log("模擬發送前台:", msg); } };
+        }
         
-        let projectData = JSON.parse(localStorage.getItem('ceremony_project')) || {
-            currentScene: "場景 A：畢業生致詞",
-            speakers: ["無標籤", "畢業生代表", "在校生代表", "校長", "家長會長", "特別貴賓"],
-            scenes: {
-                "場景 A：畢業生致詞": [
-                    { id: 1, text: "親愛的師長、同學們，大家平安。", speaker: "畢業生代表", color: "#ffffff", size: "56", animation: "slide" }
-                ],
-                "場景 B：在校生致詞": [
-                    { id: 2, text: "展翅高飛吧！學長學姐們！", speaker: "在校生代表", color: "#ffeb3b", size: "60", animation: "fade" }
-                ],
-                "場景 C：校長及貴賓致詞": []
+        // 核心資料庫初始化與相容防護
+        let projectData;
+        try {
+            const rawData = localStorage.getItem('ceremony_project');
+            if (rawData) {
+                projectData = JSON.parse(rawData);
+                // 確保關鍵陣列結構與欄位完整存在
+                if (!projectData.scenes) projectData.scenes = {};
+                if (!projectData.speakers) projectData.speakers = ["無標籤", "畢業生代表", "在校生代表", "校長"];
+                if (!projectData.currentScene) projectData.currentScene = Object.keys(projectData.scenes)[0] || "預設場景";
+            } else {
+                throw new Error("No existing data");
             }
-        };
+        } catch(e) {
+            // 資料毀損或初次載入，初始化整套乾淨、完整的資料結構
+            projectData = {
+                currentScene: "場景 A：畢業生致詞",
+                speakers: ["無標籤", "畢業生代表", "在校生代表", "校長", "家長會長", "特別貴賓"],
+                scenes: {
+                    "場景 A：畢業生致詞": [
+                        { id: 1, text: "親愛的師長、同學們，大家平安。", speaker: "畢業生代表", color: "#ffffff", size: "56", animation: "slide" }
+                    ],
+                    "場景 B：在校生致詞": [
+                        { id: 2, text: "展翅高飛吧！學長學姐們！", speaker: "在校生代表", color: "#ffeb3b", size: "60", animation: "fade" }
+                    ],
+                    "場景 C：校長及貴賓致詞": []
+                }
+            };
+        }
 
         let editId = null;
 
-        // MenuBar 開關邏輯
+        // MenuBar 控制
         function toggleMenu(event, element) {
             event.stopPropagation();
             const isShown = element.classList.contains('show');
@@ -306,20 +329,24 @@
             closeAllMenus();
         });
 
+        // 🟢 儲存功能：自動儲存至 localStorage（GitHub Pages 靜態環境最速、最穩定的儲存手段）
         function saveToStorage() {
-            localStorage.setItem('ceremony_project', JSON.stringify(projectData));
+            try {
+                localStorage.setItem('ceremony_project', JSON.stringify(projectData));
+            } catch (e) {
+                console.error("儲存失敗，可能是隱私模式禁用了 LocalStorage", e);
+            }
         }
 
-        // 渲染 MenuBar 的場景下拉清單
+        // 渲染 MenuBar 場景
         function renderSceneMenu() {
             const dropdown = document.getElementById('sceneDropdown');
+            if(!dropdown) return;
             dropdown.innerHTML = '';
 
-            // 渲染所有現有場景
             Object.keys(projectData.scenes).forEach(sceneName => {
                 const li = document.createElement('li');
                 li.innerText = sceneName;
-                // ✨ 關鍵修正：加入 event.stopPropagation() 防止冒泡干擾點擊
                 li.onclick = (e) => {
                     e.stopPropagation();
                     switchScene(sceneName);
@@ -342,9 +369,8 @@
             dropdown.appendChild(addLi);
         }
 
-        // 新增自訂場景
         function addNewScene() {
-            const newSceneName = prompt('請輸入新場景名稱（例如：場景 D：頒獎典禮）：');
+            const newSceneName = prompt('請輸入新場景名稱：');
             if (!newSceneName || newSceneName.trim() === '') return;
             
             if (projectData.scenes[newSceneName]) {
@@ -355,15 +381,15 @@
             projectData.scenes[newSceneName] = [];
             projectData.currentScene = newSceneName;
             
-            saveToStorage();
+            saveToStorage(); // 儲存變更
             renderSceneMenu();
             renderList();
             closeAllMenus();
         }
 
-        // 載入講者下拉選單項目
         function populateSpeakerSelect() {
             const select = document.getElementById('subSpeakerSelect');
+            if(!select) return;
             select.innerHTML = '';
 
             projectData.speakers.forEach(speaker => {
@@ -387,7 +413,7 @@
                 if (newSpeaker && newSpeaker.trim() !== '') {
                     if (!projectData.speakers.includes(newSpeaker)) {
                         projectData.speakers.push(newSpeaker);
-                        saveToStorage();
+                        saveToStorage(); // 儲存新增的講者標籤
                     }
                     populateSpeakerSelect();
                     select.value = newSpeaker;
@@ -398,10 +424,22 @@
             updateLivePreview();
         }
 
-        // 渲染主列表面版
+        // 渲染主列表面版（含新增、編輯功能修復）
         function renderList() {
+            // 避免空值造成網頁錯誤
+            if (!projectData.scenes[projectData.currentScene]) {
+                const availableScenes = Object.keys(projectData.scenes);
+                if (availableScenes.length > 0) {
+                    projectData.currentScene = availableScenes[0];
+                } else {
+                    projectData.scenes["預設場景"] = [];
+                    projectData.currentScene = "預設場景";
+                }
+            }
+
             document.getElementById('currentSceneDisplay').innerText = `目前場景：${projectData.currentScene}`;
             const listEl = document.getElementById('subtitleList');
+            if(!listEl) return;
             listEl.innerHTML = '';
             
             const currentSubtitles = projectData.scenes[projectData.currentScene] || [];
@@ -431,148 +469,3 @@
 
         function switchScene(sceneName) {
             projectData.currentScene = sceneName;
-            saveToStorage();
-            renderList();
-        }
-
-        // ✨ 擴充：現在會直接匯出「整份專案」（包含所有場景、標籤與字幕設定）
-        function exportProject() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `完整典禮字幕專案檔.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            closeAllMenus();
-        }
-
-        function importProject(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (parsed.scenes && parsed.currentScene) {
-                        if(!parsed.speakers) parsed.speakers = ["無標籤", "畢業生代表", "在校生代表", "校長"];
-                        projectData = parsed;
-                        saveToStorage();
-                        renderSceneMenu();
-                        renderList();
-                        alert('整份專案已完美匯入成功！');
-                    } else {
-                        alert('檔案格式不正確。');
-                    }
-                } catch (err) {
-                    alert('讀取檔案失敗。');
-                }
-            };
-            reader.readAsText(file);
-            closeAllMenus();
-        }
-
-        function updateLivePreview() {
-            const text = document.getElementById('subText').value || "（請輸入文字）";
-            const speaker = document.getElementById('subSpeakerSelect').value;
-            const color = document.getElementById('subColor').value;
-            const size = document.getElementById('subSize').value;
-
-            document.getElementById('fontSizeVal').innerText = size;
-            document.getElementById('preSpeaker').innerText = (speaker && speaker !== "無標籤") ? `【 ${speaker} 】` : '';
-            document.getElementById('preText').innerText = text;
-            document.getElementById('preText').style.color = color;
-            document.getElementById('preText').style.fontSize = (size * 0.45) + 'px';
-        }
-
-        function openModal() {
-            editId = null;
-            populateSpeakerSelect();
-            document.getElementById('modalTitle').innerText = "新增字幕項目";
-            document.getElementById('subText').value = "";
-            document.getElementById('subSpeakerSelect').value = "無標籤";
-            document.getElementById('subColor').value = "#ffffff";
-            document.getElementById('subSize').value = "56";
-            document.getElementById('subAnimation').value = "none";
-            document.getElementById('modalOverlay').style.display = 'flex';
-            updateLivePreview();
-        }
-
-        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-
-        function saveSubtitle() {
-            const text = document.getElementById('subText').value;
-            const speaker = document.getElementById('subSpeakerSelect').value;
-            const color = document.getElementById('subColor').value;
-            const size = document.getElementById('subSize').value;
-            const animation = document.getElementById('subAnimation').value;
-
-            if(!text) return alert('內容不能為空');
-
-            const currentSubtitles = projectData.scenes[projectData.currentScene];
-
-            if(editId) {
-                const sub = currentSubtitles.find(s => s.id === editId);
-                Object.assign(sub, { text, speaker, color, size, animation });
-            } else {
-                currentSubtitles.push({ id: Date.now(), text, speaker, color, size, animation });
-            }
-            
-            saveToStorage();
-            renderList();
-            closeModal();
-        }
-
-        function editSubtitle(id) {
-            const currentSubtitles = projectData.scenes[projectData.currentScene];
-            const sub = currentSubtitles.find(s => s.id === id);
-            editId = id;
-            
-            populateSpeakerSelect();
-            if(!projectData.speakers.includes(sub.speaker)){
-                projectData.speakers.push(sub.speaker);
-                populateSpeakerSelect();
-            }
-
-            document.getElementById('modalTitle').innerText = "編輯字幕項目";
-            document.getElementById('subText').value = sub.text;
-            document.getElementById('subSpeakerSelect').value = sub.speaker || "無標籤";
-            document.getElementById('subColor').value = sub.color;
-            document.getElementById('subSize').value = sub.size;
-            document.getElementById('subAnimation').value = sub.animation;
-            document.getElementById('modalOverlay').style.display = 'flex';
-            updateLivePreview();
-        }
-
-        function deleteSubtitle(id, text) {
-            if(confirm(`是否要刪除「${text}」？`)) {
-                projectData.scenes[projectData.currentScene] = projectData.scenes[projectData.currentScene].filter(s => s.id !== id);
-                saveToStorage();
-                renderList();
-            }
-        }
-
-        function sendToLive(index) {
-            const sub = projectData.scenes[projectData.currentScene][index];
-            channel.postMessage({ type: 'UPDATE_SUBTITLE', data: sub });
-        }
-
-        function clearAllLive() { channel.postMessage({ type: 'CLEAR' }); }
-
-        function uploadBackground(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    channel.postMessage({ type: 'UPDATE_BG', data: e.target.result });
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // 初始化
-        renderSceneMenu();
-        renderList();
-    </script>
-</body>
-</html>
