@@ -11,6 +11,7 @@
             --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
             --text-color: #ffffff;
             --accent-color: #007aff;
+            --danger-color: #ef4444;
         }
 
         body {
@@ -42,7 +43,7 @@
             font-size: 14px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
-            z-index: 5000; /* 確保選單在最上層 */
+            z-index: 5000;
         }
 
         .menu-left { 
@@ -100,7 +101,7 @@
             border: 1px solid rgba(0, 122, 255, 0.5);
         }
 
-        /* 工作區 - ✨ 關鍵修正：調低 z-index，並確保不遮擋頂部選單與按鈕 */
+        /* 工作區 */
         .main-container {
             margin: 20px;
             height: calc(100vh - 140px);
@@ -117,7 +118,6 @@
             z-index: 10; 
         }
 
-        /* 提升按鈕列的點擊層級，防止被任何隱形元素阻擋 */
         .action-bar { 
             display: flex; 
             justify-content: space-between; 
@@ -132,7 +132,7 @@
             color: white; padding: 8px 16px; border-radius: 8px;
             cursor: pointer; transition: all 0.2s ease;
             position: relative;
-            z-index: 30; /* 強制按鈕層級最前 */
+            z-index: 30;
         }
         .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-1px); }
         .btn-live { background: rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
@@ -146,7 +146,7 @@
             display: flex; align-items: center; justify-content: space-between;
         }
 
-        /* CSS Button 講者標籤樣式 */
+        /* 講者標籤樣式 */
         .speaker-badge {
             display: inline-block;
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
@@ -161,7 +161,7 @@
             margin-bottom: 6px;
         }
 
-        /* Modal - ✨ 確保彈出視窗絕對在最頂層 */
+        /* Modal 共用樣式 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.5); backdrop-filter: blur(15px);
@@ -186,13 +186,17 @@
             background: #000; border-radius: 8px; padding: 15px;
             min-height: 60px; text-align: center; margin-top: 5px;
         }
+
+        /* ✨ 新增：通知/確認對話框專用樣式 (取代 Alert/Confirm) */
+        .alert-modal { width: 350px; text-align: center; }
+        .alert-message { font-size: 15px; color: #e2e8f0; line-height: 1.5; margin: 10px 0; }
     </style>
 </head>
 <body>
 
     <div class="menu-bar">
         <div class="menu-left">
-            <div style="font-weight: bold; user-select: none; margin-right: 10px;"> 典禮字幕控制後台</div>
+            <div style="font-weight: bold; user-select: none; margin-right: 10px;">典禮字幕控制後台</div>
             
             <div class="menu-item" onclick="toggleMenu(event, this)">檔案
                 <ul class="dropdown-menu">
@@ -276,8 +280,18 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="alertModalOverlay">
+        <div class="modal alert-modal">
+            <div class="modal-body">
+                <h3 id="alertTitle" style="margin:0; font-size:16px;">系統提示</h3>
+                <div id="alertMessage" class="alert-message">這是訊息內容</div>
+                <div style="display:flex; justify-content:center; gap:12px; margin-top:5px;" id="alertBtnContainer">
+                    </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // GitHub 環境防癱瘓安全機制
         let channel;
         try {
             channel = new BroadcastChannel('ceremony_subtitles');
@@ -285,7 +299,6 @@
             channel = { postMessage: function(msg) { console.log("本地模式運作中:", msg); } };
         }
         
-        // 資料庫初始化與強固快取讀取
         let projectData;
         try {
             const rawData = localStorage.getItem('ceremony_project');
@@ -295,7 +308,7 @@
                 if (!projectData.speakers) projectData.speakers = ["無標籤", "畢業生代表", "在校生代表", "校長"];
                 if (!projectData.currentScene) projectData.currentScene = Object.keys(projectData.scenes)[0] || "預設場景";
             } else {
-                throw new Error("New data required");
+                throw new Error("Initial Data Required");
             }
         } catch(e) {
             projectData = {
@@ -315,7 +328,49 @@
 
         let editId = null;
 
-        // MenuBar 控制
+        // ✨ 自訂全域彈出視窗函式 (取代 alert 和 confirm)
+        // options 格式: { title: "標題", message: "內容", isConfirm: true/false, onConfirm: 回呼函式 }
+        function showSystemModal(options) {
+            document.getElementById('alertTitle').innerText = options.title || "系統提示";
+            document.getElementById('alertMessage').innerText = options.message || "";
+            
+            const btnContainer = document.getElementById('alertBtnContainer');
+            btnContainer.innerHTML = ""; // 清空舊按鈕
+            
+            if (options.isConfirm) {
+                // 如果是 Confirm 模式 (有取消與確定)
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = "btn";
+                cancelBtn.innerText = "取消";
+                cancelBtn.onclick = () => { document.getElementById('alertModalOverlay').style.display = 'none'; };
+                
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = "btn";
+                confirmBtn.style.background = options.isDanger ? "var(--danger-color)" : "var(--accent-color)";
+                confirmBtn.style.borderColor = options.isDanger ? "var(--danger-color)" : "var(--accent-color)";
+                confirmBtn.innerText = "確定";
+                confirmBtn.onclick = () => {
+                    document.getElementById('alertModalOverlay').style.display = 'none';
+                    if (typeof options.onConfirm === 'function') options.onConfirm();
+                };
+                
+                btnContainer.appendChild(cancelBtn);
+                btnContainer.appendChild(confirmBtn);
+            } else {
+                // 如果是 Alert 模式 (只有確認)
+                const okBtn = document.createElement('button');
+                okBtn.className = "btn";
+                okBtn.style.background = "var(--accent-color)";
+                okBtn.style.borderColor = "var(--accent-color)";
+                okBtn.style.padding = "8px 24px";
+                okBtn.innerText = "好";
+                okBtn.onclick = () => { document.getElementById('alertModalOverlay').style.display = 'none'; };
+                btnContainer.appendChild(okBtn);
+            }
+            
+            document.getElementById('alertModalOverlay').style.display = 'flex';
+        }
+
         function toggleMenu(event, element) {
             event.stopPropagation();
             const isShown = element.classList.contains('show');
@@ -335,16 +390,14 @@
             closeAllMenus();
         });
 
-        // 自動儲存至 localStorage
         function saveToStorage() {
             try {
                 localStorage.setItem('ceremony_project', JSON.stringify(projectData));
             } catch (e) {
-                console.error("無法寫入快取空間", e);
+                console.error("儲存失敗", e);
             }
         }
 
-        // 渲染 MenuBar 場景
         function renderSceneMenu() {
             const dropdown = document.getElementById('sceneDropdown');
             if(!dropdown) return;
@@ -376,11 +429,11 @@
         }
 
         function addNewScene() {
-            const newSceneName = prompt('請輸入新場景名稱：');
+            const newSceneName = prompt('請輸入新場景名稱：'); // 註：Prompt因牽涉到打字暫不更動
             if (!newSceneName || newSceneName.trim() === '') return;
             
             if (projectData.scenes[newSceneName]) {
-                alert('此場景名稱已存在！');
+                showSystemModal({ title: "名稱重複", message: "此場景名稱已存在！", isConfirm: false });
                 return;
             }
 
@@ -430,7 +483,6 @@
             updateLivePreview();
         }
 
-        // 渲染主列表面版
         function renderList() {
             if (!projectData.scenes[projectData.currentScene]) {
                 const availableScenes = Object.keys(projectData.scenes);
@@ -478,7 +530,6 @@
             renderList();
         }
 
-        // 一鍵匯出整份專案
         function exportProject() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
             const downloadAnchor = document.createElement('a');
@@ -491,8 +542,10 @@
         }
 
         function importProject(event) {
-            const file = event.target.files[0];
+            const fileInput = event.target;
+            const file = fileInput.files[0];
             if (!file) return;
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -504,13 +557,14 @@
                         saveToStorage(); 
                         renderSceneMenu();
                         renderList();
-                        alert('整份專案已完美匯入並儲存！');
+                        showSystemModal({ title: "成功", message: "整份專案已完美匯入並儲存！", isConfirm: false });
                     } else {
-                        alert('檔案格式不正確。');
+                        showSystemModal({ title: "錯誤", message: "檔案格式不正確。", isConfirm: false });
                     }
                 } catch (err) {
-                    alert('讀取檔案失敗。');
+                    showSystemModal({ title: "失敗", message: "讀取檔案失敗。", isConfirm: false });
                 }
+                fileInput.value = "";
             };
             reader.readAsText(file);
             closeAllMenus();
@@ -551,7 +605,10 @@
             const size = document.getElementById('subSize').value;
             const animation = document.getElementById('subAnimation').value;
 
-            if(!text) return alert('內容不能為空');
+            if(!text) {
+                showSystemModal({ title: "輸入空值", message: "字幕內容不能為空！", isConfirm: false });
+                return;
+            }
 
             if(!projectData.scenes[projectData.currentScene]) {
                 projectData.scenes[projectData.currentScene] = [];
@@ -593,12 +650,19 @@
             updateLivePreview();
         }
 
+        // ✨ 修正重點：改用自訂的 CSS 確認視窗（Confirm Modal）
         function deleteSubtitle(id, text) {
-            if(confirm(`是否要刪除「${text}」？`)) {
-                projectData.scenes[projectData.currentScene] = (projectData.scenes[projectData.currentScene] || []).filter(s => s.id !== id);
-                saveToStorage(); 
-                renderList();
-            }
+            showSystemModal({
+                title: "確認刪除",
+                message: `是否要刪除「${text}」？`,
+                isConfirm: true,
+                isDanger: true,
+                onConfirm: function() {
+                    projectData.scenes[projectData.currentScene] = (projectData.scenes[projectData.currentScene] || []).filter(s => s.id !== id);
+                    saveToStorage(); 
+                    renderList();
+                }
+            });
         }
 
         function sendToLive(index) {
@@ -619,7 +683,6 @@
             }
         }
 
-        // 初始化
         renderSceneMenu();
         renderList();
     </script>
