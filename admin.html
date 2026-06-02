@@ -3,25 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>畢業典禮字幕控制後台 - 升級版</title>
+    <title>典禮字幕控制後台</title>
     <style>
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.15);
-            --glass-border: rgba(255, 255, 255, 0.25);
-            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
             --text-color: #ffffff;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #1e1b4b, #311042, #4c0519); /* 稍微調暗背景，讓玻璃感更清透 */
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e1b4b, #311042);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             color: var(--text-color);
-            overflow: hidden;
-            height: 100vh;
+            overflow: hidden; height: 100vh;
         }
 
         @keyframes gradientBG {
@@ -33,7 +31,7 @@
         /* macOS MenuBar */
         .menu-bar {
             height: 30px;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             display: flex;
@@ -42,10 +40,48 @@
             padding: 0 20px;
             font-size: 14px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000;
+            z-index: 5000;
+            position: relative;
         }
 
-        /* Liquid Glass 主要工作區 */
+        .menu-left { display: flex; gap: 20px; align-items: center; }
+        .menu-item { position: relative; cursor: pointer; padding: 2px 8px; border-radius: 4px; }
+        .menu-item:hover { background: rgba(255, 255, 255, 0.15); }
+
+        /* macOS 下拉選單 */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 25px; left: 0;
+            background: rgba(40, 40, 40, 0.95);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            min-width: 160px;
+            padding: 5px 0;
+            z-index: 5001;
+        }
+        .dropdown-menu li {
+            list-style: none;
+            padding: 6px 15px;
+            font-size: 13px;
+            color: #fff;
+            cursor: pointer;
+        }
+        .dropdown-menu li:hover { background: #007aff; }
+        .menu-item:hover .dropdown-menu { display: block; }
+
+        /* 當前場景標示 */
+        #currentSceneDisplay {
+            background: rgba(0, 122, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid rgba(0, 122, 255, 0.5);
+        }
+
+        /* 工作區 */
         .main-container {
             margin: 20px;
             height: calc(100vh - 140px);
@@ -60,224 +96,77 @@
             flex-direction: column;
         }
 
-        .action-bar {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
+        .action-bar { display: flex; justify-content: space-between; margin-bottom: 20px; }
 
         .btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white; padding: 8px 16px; border-radius: 8px;
+            cursor: pointer; transition: all 0.2s ease;
         }
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-1px); }
+        .btn-live { background: rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
+        .btn-live:hover { background: rgba(239, 68, 68, 0.6); }
 
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.4);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .btn-live {
-            background: rgba(239, 68, 68, 0.4);
-            border-color: rgba(239, 68, 68, 0.6);
-        }
-        .btn-live:hover {
-            background: rgba(239, 68, 68, 0.7);
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
-        }
-
-        /* 字幕列表區 */
-        .subtitle-list {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
+        .subtitle-list { flex: 1; overflow-y: auto; }
         .subtitle-item {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; padding: 15px; margin-bottom: 12px;
+            display: flex; align-items: center; justify-content: space-between;
         }
 
-        .subtitle-preview-text {
-            flex: 1;
-            margin-right: 20px;
-        }
-
-        .item-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .drag-handle {
-            cursor: grab;
-            padding: 5px;
-            font-size: 20px;
-            user-select: none;
-            opacity: 0.5;
-        }
-
-        /* macOS 彈出視窗 (Modal) */
+        /* Modal */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(15px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(15px);
+            display: none; justify-content: center; align-items: center; z-index: 6000;
         }
-
         .modal {
-            background: rgba(30, 30, 30, 0.85);
-            border: 1px solid rgba(255,255,255,0.25);
-            backdrop-filter: blur(30px);
-            width: 500px;
-            border-radius: 14px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-            color: white;
-            overflow: hidden;
+            background: rgba(30, 30, 30, 0.9); border: 1px solid rgba(255,255,255,0.2);
+            width: 480px; border-radius: 14px; color: white; overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group input, .form-group select {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px; border-radius: 8px; color: white; outline: none;
         }
 
-        .modal-header {
-            padding: 15px 20px;
-            background: rgba(255,255,255,0.05);
-            font-weight: bold;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .modal-body {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        /* 讓橫向排列的控制項更美觀 */
-        .form-row {
-            display: flex;
-            gap: 15px;
-        }
-        .form-row .form-group {
-            flex: 1;
-        }
-
-        .form-group input[type="text"], .form-group select {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 10px;
-            border-radius: 8px;
-            color: white;
-            outline: none;
-            font-size: 14px;
-        }
-
-        .range-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .range-container input[type="range"] {
-            flex: 1;
-            accent-color: #007aff;
-        }
-
-        /* ✨ 新增：Modal 內的即時字幕預覽區（模擬黑底大螢幕效果） */
         .modal-preview-box {
-            background: #000000;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            padding: 20px;
-            min-height: 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .modal-preview-speaker {
-            font-size: 14px;
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .modal-preview-text {
-            font-weight: bold;
-            word-break: break-all;
-            line-height: 1.3;
-        }
-
-        .modal-footer {
-            padding: 15px 20px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            background: rgba(255,255,255,0.05);
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* macOS Dock */
-        .dock-container {
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 8px;
-            border-radius: 20px;
-            display: flex;
-            gap: 15px;
-            box-shadow: var(--glass-shadow);
-        }
-        .dock-item {
-            width: 40px;
-            height: 40px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 20px;
-            transition: transform 0.2s;
-        }
-        .dock-item:hover {
-            transform: scale(1.2) translateY(-10px);
+            background: #000; border-radius: 8px; padding: 15px;
+            min-height: 60px; text-align: center; margin-top: 5px;
         }
     </style>
 </head>
 <body>
 
     <div class="menu-bar">
-        <div> SubtitleControl</div>
-        <div id="status">前台系統運作中</div>
+        <div class="menu-left">
+            <div style="font-weight: bold;"> SubtitleOS</div>
+            
+            <div class="menu-item">檔案
+                <ul class="dropdown-menu">
+                    <li onclick="exportProject()">匯出專案資料 (.json)</li>
+                    <li onclick="document.getElementById('importFile').click()">匯入專案資料...</li>
+                </ul>
+            </div>
+
+            <div class="menu-item">使用場景
+                <ul class="dropdown-menu" id="sceneDropdown">
+                    <li onclick="switchScene('場景 A：畢業生致詞')">場景 A：畢業生致詞</li>
+                    <li onclick="switchScene('場景 B：在校生致詞')">場景 B：在校生致詞</li>
+                    <li onclick="switchScene('場景 C：校長及貴賓致詞')">場景 C：校長及貴賓致詞</li>
+                </ul>
+            </div>
+        </div>
+        <div>
+            <span id="currentSceneDisplay">目前場景：畢業生致詞</span>
+        </div>
     </div>
+
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(event)">
 
     <div class="main-container">
         <div class="action-bar">
@@ -291,65 +180,50 @@
             </div>
         </div>
 
-        <div class="subtitle-list" id="subtitleList">
-            </div>
-    </div>
-
-    <div class="dock-container">
-        <div class="dock-item" title="字幕管理">📝</div>
-        <div class="dock-item" title="畫布編輯">🎨</div>
-        <div class="dock-item" title="設定">⚙️</div>
+        <div class="subtitle-list" id="subtitleList"></div>
     </div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
-            <div class="modal-header" id="modalTitle">新增字幕項目</div>
             <div class="modal-body">
-                
+                <h3 id="modalTitle" style="margin-top:0;">新增字幕項目</h3>
                 <div class="form-group">
                     <label>字幕內容</label>
-                    <input type="text" id="subText" placeholder="請輸入字幕文字..." oninput="updateLivePreview()">
+                    <input type="text" id="subText" placeholder="請輸入字幕..." oninput="updateLivePreview()">
                 </div>
-
                 <div class="form-group">
-                    <label>講者標籤 (選填)</label>
+                    <label>講者標籤</label>
                     <input type="text" id="subSpeaker" placeholder="例如：畢業生代表" oninput="updateLivePreview()">
                 </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>文字顏色</label>
-                        <input type="color" id="subColor" value="#ffffff" style="width:100%; height:38px; border:none; background:none; cursor:pointer;" oninput="updateLivePreview()">
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>顏色</label>
+                        <input type="color" id="subColor" value="#ffffff" oninput="updateLivePreview()" style="height:40px; padding:0; width:100%;">
                     </div>
-                    <div class="form-group">
-                        <label>登場動畫</label>
-                        <select id="subAnimation">
-                            <option value="none">無特效</option>
-                            <option value="fade">淡入 (Fade)</option>
-                            <option value="slide">上滑 (Slide Up)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>字體大小: <span id="fontSizeVal">56</span>px</label>
-                    <div class="range-container">
+                    <div class="form-group" style="flex:1;">
+                        <label>字體大小 (<span id="fontSizeVal">56</span>px)</label>
                         <input type="range" id="subSize" min="24" max="100" value="56" oninput="updateLivePreview()">
                     </div>
                 </div>
-
                 <div class="form-group">
-                    <label>🔍 即時畫面預覽 (模擬大螢幕)</label>
+                    <label>登場動畫</label>
+                    <select id="subAnimation">
+                        <option value="none">無特效</option>
+                        <option value="fade">淡入 (Fade)</option>
+                        <option value="slide">上滑 (Slide Up)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🔍 即時畫面預覽</label>
                     <div class="modal-preview-box">
-                        <div class="modal-preview-speaker" id="preSpeaker"></div>
-                        <div class="modal-preview-text" id="preText">預覽文字</div>
+                        <div id="preSpeaker" style="font-size:12px; color:rgba(255,255,255,0.6);"></div>
+                        <div id="preText" style="font-weight:bold;"></div>
                     </div>
                 </div>
-
-            </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="closeModal()">取消</button>
-                <button class="btn" style="background:#007aff; border-color:#007aff;" onclick="saveSubtitle()">儲存項目</button>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                    <button class="btn" onclick="closeModal()">取消</button>
+                    <button class="btn" style="background:#007aff;" onclick="saveSubtitle()">儲存</button>
+                </div>
             </div>
         </div>
     </div>
@@ -357,57 +231,104 @@
     <script>
         const channel = new BroadcastChannel('ceremony_subtitles');
         
-        // 預設資料中加入了 size 屬性
-        let subtitles = JSON.parse(localStorage.getItem('subtitles')) || [
-            { id: 1, text: "各位師長、各位同學，大家好。", speaker: "在校生代表", color: "#ffffff", size: "56", animation: "slide" },
-            { id: 2, text: "祝大家畢業快樂，鵬程萬里！", speaker: "畢業生代表", color: "#ffeb3b", size: "64", animation: "fade" }
-        ];
-        
+        // 全域資料庫結構：包含當前場景以及各場景的字幕集
+        let projectData = JSON.parse(localStorage.getItem('ceremony_project')) || {
+            currentScene: "場景 A：畢業生致詞",
+            scenes: {
+                "場景 A：畢業生致詞": [
+                    { id: 1, text: "親愛的師長、同學們，大家平安。", speaker: "畢業生代表", color: "#ffffff", size: "56", animation: "slide" }
+                ],
+                "場景 B：在校生致詞": [
+                    { id: 2, text: "展翅高飛吧！學長學姐們！", speaker: "在校生代表", color: "#ffeb3b", size: "60", animation: "fade" }
+                ],
+                "場景 C：校長及貴賓致詞": []
+            }
+        };
+
         let editId = null;
 
+        function saveToStorage() {
+            localStorage.setItem('ceremony_project', JSON.stringify(projectData));
+        }
+
         function renderList() {
+            document.getElementById('currentSceneDisplay').innerText = `目前場景：${projectData.currentScene}`;
             const listEl = document.getElementById('subtitleList');
             listEl.innerHTML = '';
-            subtitles.forEach((sub, index) => {
+            
+            const currentSubtitles = projectData.scenes[projectData.currentScene] || [];
+
+            currentSubtitles.forEach((sub, index) => {
                 const item = document.createElement('div');
                 item.className = 'subtitle-item';
                 item.innerHTML = `
-                    <div class="subtitle-preview-text">
-                        <small style="color: rgba(255,255,255,0.5); display:block;">[${sub.speaker || '無標籤'}] (大小: ${sub.size || 56}px)</small>
-                        <span style="color: ${sub.color}; font-size: 18px;">${sub.text}</span>
+                    <div>
+                        <small style="color:rgba(255,255,255,0.5)">[${sub.speaker || '無標籤'}] (${sub.size}px)</small>
+                        <div style="color:${sub.color}; font-size:18px; margin-top:4px;">${sub.text}</div>
                     </div>
-                    <div class="item-actions">
+                    <div>
                         <button class="btn btn-live" onclick="sendToLive(${index})">放送</button>
                         <button class="btn" onclick="editSubtitle(${sub.id})">編輯</button>
-                        <button class="btn" style="background:rgba(255,0,0,0.2); border-color: rgba(255,0,0,0.3);" onclick="deleteSubtitle(${sub.id}, '${sub.text}')">刪除</button>
-                        <div class="drag-handle">☰</div>
+                        <button class="btn" style="background:rgba(255,0,0,0.2)" onclick="deleteSubtitle(${sub.id}, '${sub.text}')">刪除</button>
                     </div>
                 `;
                 listEl.appendChild(item);
             });
-            localStorage.setItem('subtitles', JSON.stringify(subtitles));
         }
 
-        // 當使用者在 Modal 裡面輸入或調整滑桿時，即時觸發這個 function
+        // 場景切換
+        function switchScene(sceneName) {
+            projectData.currentScene = sceneName;
+            saveToStorage();
+            renderList();
+        }
+
+        // 🚀 核心功能：專案匯出成 JSON 檔案（可跨裝置傳輸）
+        function exportProject() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `畢業典禮字幕專案_${projectData.currentScene}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // 🚀 核心功能：從別的裝置匯入 JSON 檔案
+        function importProject(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.scenes && parsed.currentScene) {
+                        projectData = parsed;
+                        saveToStorage();
+                        renderList();
+                        alert('專案匯入成功！');
+                    } else {
+                        alert('檔案格式不正確，非有效的字幕專案檔。');
+                    }
+                } catch (err) {
+                    alert('讀取檔案失敗。');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Modal 與預覽邏輯
         function updateLivePreview() {
-            const text = document.getElementById('subText').value || "（請輸入字幕內容）";
+            const text = document.getElementById('subText').value || "（請輸入文字）";
             const speaker = document.getElementById('subSpeaker').value;
             const color = document.getElementById('subColor').value;
             const size = document.getElementById('subSize').value;
 
-            // 更新數值文字顯示
             document.getElementById('fontSizeVal').innerText = size;
-
-            // 更新預覽區樣式與內容
-            const preSpeaker = document.getElementById('preSpeaker');
-            const preText = document.getElementById('preText');
-
-            preSpeaker.innerText = speaker ? `【 ${speaker} 】` : '';
-            preText.innerText = text;
-            preText.style.color = color;
-            
-            // 為了不讓彈出視窗被撐得太大，預覽區的字體做 0.5 倍的縮放顯示，但比例是完全一樣的
-            preText.style.fontSize = (size * 0.5) + 'px'; 
+            document.getElementById('preSpeaker').innerText = speaker ? `【 ${speaker} 】` : '';
+            document.getElementById('preText').innerText = text;
+            document.getElementById('preText').style.color = color;
+            document.getElementById('preText').style.fontSize = (size * 0.45) + 'px';
         }
 
         function openModal() {
@@ -417,14 +338,11 @@
             document.getElementById('subSpeaker').value = "";
             document.getElementById('subColor').value = "#ffffff";
             document.getElementById('subSize').value = "56";
-            document.getElementById('subAnimation').value = "none";
             document.getElementById('modalOverlay').style.display = 'flex';
-            updateLivePreview(); // 重新整理預覽
+            updateLivePreview();
         }
 
-        function closeModal() {
-            document.getElementById('modalOverlay').style.display = 'none';
-        }
+        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
 
         function saveSubtitle() {
             const text = document.getElementById('subText').value;
@@ -433,46 +351,50 @@
             const size = document.getElementById('subSize').value;
             const animation = document.getElementById('subAnimation').value;
 
-            if(!text) return alert('請輸入字幕內容');
+            if(!text) return alert('內容不能為空');
+
+            const currentSubtitles = projectData.scenes[projectData.currentScene];
 
             if(editId) {
-                const sub = subtitles.find(s => s.id === editId);
-                sub.text = text; sub.speaker = speaker; sub.color = color; sub.size = size; sub.animation = animation;
+                const sub = currentSubtitles.find(s => s.id === editId);
+                Object.assign(sub, { text, speaker, color, size, animation });
             } else {
-                subtitles.push({ id: Date.now(), text, speaker, color, size, animation });
+                currentSubtitles.push({ id: Date.now(), text, speaker, color, size, animation });
             }
+            
+            saveToStorage();
             renderList();
             closeModal();
         }
 
         function editSubtitle(id) {
-            const sub = subtitles.find(s => s.id === id);
+            const currentSubtitles = projectData.scenes[projectData.currentScene];
+            const sub = currentSubtitles.find(s => s.id === id);
             editId = id;
             document.getElementById('modalTitle').innerText = "編輯字幕項目";
             document.getElementById('subText').value = sub.text;
             document.getElementById('subSpeaker').value = sub.speaker;
             document.getElementById('subColor').value = sub.color;
-            document.getElementById('subSize').value = sub.size || "56";
-            document.getElementById('subAnimation').value = sub.animation || "none";
+            document.getElementById('subSize').value = sub.size;
+            document.getElementById('subAnimation').value = sub.animation;
             document.getElementById('modalOverlay').style.display = 'flex';
-            updateLivePreview(); // 載入舊資料並顯示預覽
+            updateLivePreview();
         }
 
         function deleteSubtitle(id, text) {
-            if(confirm(`是否要刪除「${text}」？`)) {
-                subtitles = subtitles.filter(s => s.id !== id);
+            if(confirm(`確認刪除「${text}」？`)) {
+                projectData.scenes[projectData.currentScene] = projectData.scenes[projectData.currentScene].filter(s => s.id !== id);
+                saveToStorage();
                 renderList();
             }
         }
 
         function sendToLive(index) {
-            const sub = subtitles[index];
+            const sub = projectData.scenes[projectData.currentScene][index];
             channel.postMessage({ type: 'UPDATE_SUBTITLE', data: sub });
         }
 
-        function clearAllLive() {
-            channel.postMessage({ type: 'CLEAR' });
-        }
+        function clearAllLive() { channel.postMessage({ type: 'CLEAR' }); }
 
         function uploadBackground(event) {
             const file = event.target.files[0];
@@ -485,6 +407,7 @@
             }
         }
 
+        // 初始化
         renderList();
     </script>
 </body>
