@@ -139,7 +139,7 @@
             display: flex; align-items: center; justify-content: space-between;
         }
 
-        /* ✨ CSS Button 講者標籤樣式 */
+        /* CSS Button 講者標籤樣式 */
         .speaker-badge {
             display: inline-block;
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
@@ -187,8 +187,8 @@
             
             <div class="menu-item" onclick="toggleMenu(event, this)">檔案
                 <ul class="dropdown-menu">
-                    <li onclick="exportProject()">匯出專案資料 (.json)</li>
-                    <li onclick="document.getElementById('importFile').click()">匯入專案資料...</li>
+                    <li onclick="event.stopPropagation(); exportProject();">匯出整份專案 (.json)</li>
+                    <li onclick="event.stopPropagation(); document.getElementById('importFile').click();">匯入專案資料...</li>
                 </ul>
             </div>
 
@@ -270,7 +270,6 @@
     <script>
         const channel = new BroadcastChannel('ceremony_subtitles');
         
-        // 資料庫結構擴充：新增預設講者標籤清單
         let projectData = JSON.parse(localStorage.getItem('ceremony_project')) || {
             currentScene: "場景 A：畢業生致詞",
             speakers: ["無標籤", "畢業生代表", "在校生代表", "校長", "家長會長", "特別貴賓"],
@@ -320,11 +319,15 @@
             Object.keys(projectData.scenes).forEach(sceneName => {
                 const li = document.createElement('li');
                 li.innerText = sceneName;
-                li.onclick = () => switchScene(sceneName);
+                // ✨ 關鍵修正：加入 event.stopPropagation() 防止冒泡干擾點擊
+                li.onclick = (e) => {
+                    e.stopPropagation();
+                    switchScene(sceneName);
+                    closeAllMenus();
+                };
                 dropdown.appendChild(li);
             });
 
-            // 分隔線與「新增自訂場景」按鈕
             const divider = document.createElement('div');
             divider.className = 'menu-divider';
             dropdown.appendChild(divider);
@@ -349,9 +352,8 @@
                 return;
             }
 
-            // 初始化新場景的空陣列
             projectData.scenes[newSceneName] = [];
-            projectData.currentScene = newSceneName; // 直接切換到新場景
+            projectData.currentScene = newSceneName;
             
             saveToStorage();
             renderSceneMenu();
@@ -359,7 +361,7 @@
             closeAllMenus();
         }
 
-        // 填滿彈出視窗中的講者下拉選單
+        // 載入講者下拉選單項目
         function populateSpeakerSelect() {
             const select = document.getElementById('subSpeakerSelect');
             select.innerHTML = '';
@@ -371,7 +373,6 @@
                 select.appendChild(opt);
             });
 
-            // 新增一個動態的自訂選項
             const optAdd = document.createElement('option');
             optAdd.value = "__ADD_NEW__";
             optAdd.innerText = "＋ 新增自訂標籤...";
@@ -379,7 +380,6 @@
             select.appendChild(optAdd);
         }
 
-        // 處理講者下拉選單變更（偵測是否點選了「新增」）
         function handleSpeakerSelectChange() {
             const select = document.getElementById('subSpeakerSelect');
             if (select.value === "__ADD_NEW__") {
@@ -390,15 +390,15 @@
                         saveToStorage();
                     }
                     populateSpeakerSelect();
-                    select.value = newSpeaker; // 自動選取剛剛新增的標籤
+                    select.value = newSpeaker;
                 } else {
-                    select.value = "無標籤"; // 取消則切回預設
+                    select.value = "無標籤";
                 }
             }
             updateLivePreview();
         }
 
-        // 渲染主列表面版（含升級版 CSS Button 標籤）
+        // 渲染主列表面版
         function renderList() {
             document.getElementById('currentSceneDisplay').innerText = `目前場景：${projectData.currentScene}`;
             const listEl = document.getElementById('subtitleList');
@@ -410,7 +410,6 @@
                 const item = document.createElement('div');
                 item.className = 'subtitle-item';
                 
-                // 講者標籤渲染為精緻的 CSS 膠囊 Button 外觀
                 const speakerDisplay = (sub.speaker && sub.speaker !== "無標籤") 
                     ? `<div class="speaker-badge">👤 ${sub.speaker}</div>` 
                     : `<div class="speaker-badge" style="background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.4)">無標籤</div>`;
@@ -436,14 +435,16 @@
             renderList();
         }
 
+        // ✨ 擴充：現在會直接匯出「整份專案」（包含所有場景、標籤與字幕設定）
         function exportProject() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `典禮字幕專案_${projectData.currentScene}.json`);
+            downloadAnchor.setAttribute("download", `完整典禮字幕專案檔.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
+            closeAllMenus();
         }
 
         function importProject(event) {
@@ -454,13 +455,12 @@
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (parsed.scenes && parsed.currentScene) {
-                        // 相容舊版本專案，若無 speakers 清單則補上預設
                         if(!parsed.speakers) parsed.speakers = ["無標籤", "畢業生代表", "在校生代表", "校長"];
                         projectData = parsed;
                         saveToStorage();
                         renderSceneMenu();
                         renderList();
-                        alert('專案匯入成功！');
+                        alert('整份專案已完美匯入成功！');
                     } else {
                         alert('檔案格式不正確。');
                     }
@@ -469,6 +469,7 @@
                 }
             };
             reader.readAsText(file);
+            closeAllMenus();
         }
 
         function updateLivePreview() {
@@ -528,7 +529,6 @@
             editId = id;
             
             populateSpeakerSelect();
-            // 如果專案內的標籤不在目前選單內，就塞進去（防止匯入不一致）
             if(!projectData.speakers.includes(sub.speaker)){
                 projectData.speakers.push(sub.speaker);
                 populateSpeakerSelect();
@@ -570,7 +570,7 @@
             }
         }
 
-        // 初始化載入
+        // 初始化
         renderSceneMenu();
         renderList();
     </script>
