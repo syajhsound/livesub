@@ -12,6 +12,7 @@
             --text-color: #ffffff;
             --accent-color: #007aff;
             --danger-color: #ef4444;
+            --success-color: #10b981;
         }
 
         body {
@@ -46,148 +47,64 @@
             z-index: 5000;
         }
 
-        .menu-left { 
-            display: flex; 
-            gap: 20px; 
-            align-items: center; 
-        }
-
-        .menu-item { 
-            position: relative; 
-            cursor: pointer; 
-            padding: 2px 8px; 
-            border-radius: 4px; 
-            user-select: none;
-        }
+        .menu-left { display: flex; gap: 20px; align-items: center; }
+        .menu-item { position: relative; cursor: pointer; padding: 2px 8px; border-radius: 4px; user-select: none; }
         .menu-item:hover, .menu-item.show { background: rgba(255, 255, 255, 0.15); }
 
         /* macOS 下拉選單 */
         .dropdown-menu {
             display: none;
             position: absolute;
-            top: 25px; 
-            left: 0;
+            top: 25px; left: 0;
             background: rgba(40, 40, 40, 0.95);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 6px;
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-            min-width: 200px;
-            padding: 5px 0;
-            margin: 0;
+            min-width: 220px; padding: 5px 0; margin: 0;
             z-index: 6000 !important;
         }
-        
         .menu-item.show .dropdown-menu { display: block; }
-
-        .dropdown-menu li {
-            list-style: none;
-            padding: 6px 15px;
-            font-size: 13px;
-            color: #fff;
-            cursor: pointer;
-        }
+        
+        /* 刪除場景小按鈕 */
+        .dropdown-menu li { list-style: none; padding: 6px 15px; font-size: 13px; color: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .dropdown-menu li:hover { background: var(--accent-color); }
         .dropdown-menu .menu-divider { height: 1px; background: rgba(255,255,255,0.15); margin: 4px 0; }
         .dropdown-menu .menu-action { color: #a5b4fc; font-weight: 500; }
+        
+        .btn-delete-scene { background: transparent; border: none; color: rgba(255,255,255,0.4); font-size: 12px; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+        .btn-delete-scene:hover { background: var(--danger-color); color: white; }
 
-        /* 當前場景標示 */
-        #currentSceneDisplay {
-            background: rgba(0, 122, 255, 0.3);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            border: 1px solid rgba(0, 122, 255, 0.5);
-        }
+        #currentSceneDisplay { background: rgba(0, 122, 255, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 12px; border: 1px solid rgba(0, 122, 255, 0.5); }
 
         /* 工作區 */
         .main-container {
-            margin: 20px;
-            height: calc(100vh - 140px);
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            box-shadow: var(--glass-shadow);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            z-index: 10; 
+            margin: 20px; height: calc(100vh - 140px);
+            background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); border-radius: 16px; box-shadow: var(--glass-shadow);
+            padding: 20px; display: flex; flex-direction: column; position: relative; z-index: 10; 
         }
 
-        .action-bar { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: 20px; 
-            position: relative;
-            z-index: 20; 
-        }
-
-        .btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white; padding: 8px 16px; border-radius: 8px;
-            cursor: pointer; transition: all 0.2s ease;
-            position: relative;
-            z-index: 30;
-        }
+        .action-bar { display: flex; justify-content: space-between; margin-bottom: 20px; position: relative; z-index: 20; }
+        .btn { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; position: relative; z-index: 30; }
         .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-1px); }
         .btn-live { background: rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
         .btn-live:hover { background: rgba(239, 68, 68, 0.6); }
 
+        .file-name-badge { display: inline-block; vertical-align: middle; margin-left: 8px; font-size: 12px; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         .subtitle-list { flex: 1; overflow-y: auto; position: relative; z-index: 20; }
-        .subtitle-item {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; padding: 15px; margin-bottom: 12px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
+        .subtitle-item { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
 
-        /* 講者標籤樣式 */
-        .speaker-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
-            border: 1px solid rgba(147, 51, 234, 0.4);
-            color: #e0e7ff;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            margin-bottom: 6px;
-        }
+        .speaker-badge { display: inline-block; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2)); border: 1px solid rgba(147, 51, 234, 0.4); color: #e0e7ff; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); margin-bottom: 6px; }
 
-        /* Modal 共用樣式 */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5); backdrop-filter: blur(15px);
-            display: none; justify-content: center; align-items: center; 
-            z-index: 999999 !important; 
-        }
-        .modal {
-            background: rgba(30, 30, 30, 0.9); border: 1px solid rgba(255,255,255,0.2);
-            width: 480px; border-radius: 14px; color: white; overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            z-index: 1000000 !important;
-        }
+        /* Modal 基礎結構 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 999999 !important; }
+        .modal { background: rgba(30, 30, 30, 0.9); border: 1px solid rgba(255,255,255,0.2); width: 480px; border-radius: 14px; color: white; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5); z-index: 1000000 !important; }
         .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group input, .form-group select {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            padding: 10px; border-radius: 8px; color: white; outline: none; font-size: 14px;
-        }
+        .form-group input, .form-group select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; color: white; outline: none; font-size: 14px; }
         .form-group select option { background: #222; color: #fff; }
-
-        .modal-preview-box {
-            background: #000; border-radius: 8px; padding: 15px;
-            min-height: 60px; text-align: center; margin-top: 5px;
-        }
-
-        /* ✨ 新增：通知/確認對話框專用樣式 (取代 Alert/Confirm) */
+        .modal-preview-box { background: #000; border-radius: 8px; padding: 15px; min-height: 60px; text-align: center; margin-top: 5px; }
         .alert-modal { width: 350px; text-align: center; }
         .alert-message { font-size: 15px; color: #e2e8f0; line-height: 1.5; margin: 10px 0; }
     </style>
@@ -196,23 +113,18 @@
 
     <div class="menu-bar">
         <div class="menu-left">
-            <div style="font-weight: bold; user-select: none; margin-right: 10px;">典禮字幕控制後台</div>
-            
+            <div style="font-weight: bold; user-select: none; margin-right: 10px;"> 典禮字幕控制後台</div>
             <div class="menu-item" onclick="toggleMenu(event, this)">檔案
                 <ul class="dropdown-menu">
                     <li onclick="event.stopPropagation(); exportProject();">匯出整份專案 (.json)</li>
                     <li onclick="event.stopPropagation(); document.getElementById('importFile').click();">匯入專案資料...</li>
                 </ul>
             </div>
-
             <div class="menu-item" onclick="toggleMenu(event, this)">使用場景
-                <ul class="dropdown-menu" id="sceneDropdown">
-                    </ul>
+                <ul class="dropdown-menu" id="sceneDropdown"></ul>
             </div>
         </div>
-        <div>
-            <span id="currentSceneDisplay">目前場景：未載入</span>
-        </div>
+        <div><span id="currentSceneDisplay">目前場景：未載入</span></div>
     </div>
 
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(event)">
@@ -220,15 +132,16 @@
     <div class="main-container">
         <div class="action-bar">
             <div>
-                <button class="btn" onclick="event.stopPropagation(); openModal();">＋ 新增字幕</button>
+                <button class="btn" style="background: var(--accent-color); border-color: var(--accent-color);" onclick="event.stopPropagation(); openModal();">＋ 新增字幕</button>
+                <button class="btn" onclick="event.stopPropagation(); openDefaultConfigModal();">⚙️ 預設格式</button>
                 <button class="btn" onclick="event.stopPropagation(); clearAllLive();">清除前台畫面</button>
             </div>
             <div>
                 <input type="file" id="bgUpload" accept="image/*" style="display:none" onchange="uploadBackground(event)">
                 <button class="btn" onclick="event.stopPropagation(); document.getElementById('bgUpload').click();">變更前台背景圖</button>
+                <span class="file-name-badge" id="bgFileNameDisplay">未選取背景圖</span>
             </div>
         </div>
-
         <div class="subtitle-list" id="subtitleList"></div>
     </div>
 
@@ -236,68 +149,52 @@
         <div class="modal" onclick="event.stopPropagation();">
             <div class="modal-body">
                 <h3 id="modalTitle" style="margin-top:0;">新增字幕項目</h3>
-                <div class="form-group">
-                    <label>字幕內容</label>
-                    <input type="text" id="subText" placeholder="請輸入字幕..." oninput="updateLivePreview()">
-                </div>
-                
-                <div class="form-group">
-                    <label>講者標籤</label>
-                    <select id="subSpeakerSelect" onchange="handleSpeakerSelectChange()">
-                        </select>
-                </div>
-
+                <div class="form-group"><label>字幕內容</label><input type="text" id="subText" placeholder="請輸入字幕..." oninput="updateLivePreview()"></div>
+                <div class="form-group"><label>講者標籤</label><select id="subSpeakerSelect" onchange="handleSpeakerSelectChange('main')"></select></div>
                 <div style="display:flex; gap:10px;">
-                    <div class="form-group" style="flex:1;">
-                        <label>顏色</label>
-                        <input type="color" id="subColor" value="#ffffff" oninput="updateLivePreview()" style="height:40px; padding:0; width:100%;">
-                    </div>
-                    <div class="form-group" style="flex:1;">
-                        <label>字體大小 (<span id="fontSizeVal">56</span>px)</label>
-                        <input type="range" id="subSize" min="24" max="100" value="56" oninput="updateLivePreview()">
-                    </div>
+                    <div class="form-group" style="flex:1;"><label>顏色</label><input type="color" id="subColor" value="#ffffff" oninput="updateLivePreview()" style="height:40px; padding:0; width:100%;"></div>
+                    <div class="form-group" style="flex:1;"><label>字體大小 (<span id="fontSizeVal">56</span>px)</label><input type="range" id="subSize" min="24" max="100" value="56" oninput="updateLivePreview()"></div>
                 </div>
-                <div class="form-group">
-                    <label>登場動畫</label>
-                    <select id="subAnimation">
-                        <option value="none">無特效</option>
-                        <option value="fade">淡入 (Fade)</option>
-                        <option value="slide">上滑 (Slide Up)</option>
-                    </select>
+                <div class="form-group"><label>登場動畫</label><select id="subAnimation"><option value="none">無特效</option><option value="fade">淡入 (Fade)</option><option value="slide">上滑 (Slide Up)</option></select></div>
+                <div class="form-group"><label>🔍 即時畫面預覽</label><div class="modal-preview-box"><div id="preSpeaker" style="font-size:12px; color:rgba(255,255,255,0.6); margin-bottom:5px;"></div><div id="preText" style="font-weight:bold; word-break:break-all; line-height:1.3;"></div></div></div>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;"><button class="btn" onclick="closeModal()">取消</button><button class="btn" style="background:var(--accent-color); border-color:var(--accent-color);" onclick="saveSubtitle()">儲存到瀏覽器</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="defaultConfigOverlay" onclick="closeDefaultConfigModal()">
+        <div class="modal" onclick="event.stopPropagation();">
+            <div class="modal-body">
+                <h3 style="margin-top:0; color: #f3f4f6;">⚙️ 設定新字幕的預設格式</h3>
+                <p style="font-size: 13px; color: rgba(255,255,255,0.6); margin: -5px 0 10px 0;">在此設定的格式，將會自動套用到接下來所有「新增」的字幕中。</p>
+                <div class="form-group"><label>預設講者標籤</label><select id="defaultSpeakerSelect" onchange="handleSpeakerSelectChange('default')"></select></div>
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1;"><label>預設顏色</label><input type="color" id="defaultColor" value="#ffffff" style="height:40px; padding:0; width:100%;"></div>
+                    <div class="form-group" style="flex:1;"><label>預設大小 (<span id="defaultFontSizeVal">56</span>px)</label><input type="range" id="defaultSize" min="24" max="100" value="56" oninput="document.getElementById('defaultFontSizeVal').innerText=this.value"></div>
                 </div>
-                <div class="form-group">
-                    <label>🔍 即時畫面預覽</label>
-                    <div class="modal-preview-box">
-                        <div id="preSpeaker" style="font-size:12px; color:rgba(255,255,255,0.6); margin-bottom:5px;"></div>
-                        <div id="preText" style="font-weight:bold; word-break:break-all; line-height:1.3;"></div>
-                    </div>
-                </div>
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
-                    <button class="btn" onclick="closeModal()">取消</button>
-                    <button class="btn" style="background:var(--accent-color); border-color:var(--accent-color);" onclick="saveSubtitle()">儲存到瀏覽器</button>
-                </div>
+                <div class="form-group"><label>預設登場動畫</label><select id="defaultAnimation"><option value="none">無特效</option><option value="fade">淡入 (Fade)</option><option value="slide">上滑 (Slide Up)</option></select></div>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;"><button class="btn" onclick="closeDefaultConfigModal()">取消</button><button class="btn" style="background:var(--success-color); border-color:var(--success-color);" onclick="saveDefaultConfig()">確認儲存</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="inputModalOverlay">
+        <div class="modal alert-modal">
+            <div class="modal-body">
+                <h3 id="inputModalTitle" style="margin:0; font-size:16px;">新增項目</h3>
+                <div class="form-group" style="margin: 10px 0;"><input type="text" id="customInputVal" placeholder="請輸入名稱..."></div>
+                <div style="display:flex; justify-content:center; gap:12px;"><button class="btn" onclick="closeInputModal()">取消</button><button class="btn" style="background:var(--accent-color); border-color:var(--accent-color);" id="inputModalSubmitBtn">確定</button></div>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="alertModalOverlay">
-        <div class="modal alert-modal">
-            <div class="modal-body">
-                <h3 id="alertTitle" style="margin:0; font-size:16px;">系統提示</h3>
-                <div id="alertMessage" class="alert-message">這是訊息內容</div>
-                <div style="display:flex; justify-content:center; gap:12px; margin-top:5px;" id="alertBtnContainer">
-                    </div>
-            </div>
-        </div>
+        <div class="modal alert-modal"><div class="modal-body"><h3 id="alertTitle" style="margin:0; font-size:16px;">系統提示</h3><div id="alertMessage" class="alert-message"></div><div style="display:flex; justify-content:center; gap:12px; margin-top:5px;" id="alertBtnContainer"></div></div></div>
     </div>
 
     <script>
         let channel;
-        try {
-            channel = new BroadcastChannel('ceremony_subtitles');
-        } catch(e) {
-            channel = { postMessage: function(msg) { console.log("本地模式運作中:", msg); } };
-        }
+        try { channel = new BroadcastChannel('ceremony_subtitles'); } catch(e) { channel = { postMessage: function(msg) {} }; }
         
         let projectData;
         try {
@@ -307,378 +204,263 @@
                 if (!projectData.scenes) projectData.scenes = {};
                 if (!projectData.speakers) projectData.speakers = ["無標籤", "畢業生代表", "在校生代表", "校長"];
                 if (!projectData.currentScene) projectData.currentScene = Object.keys(projectData.scenes)[0] || "預設場景";
-            } else {
-                throw new Error("Initial Data Required");
-            }
+                // 初始化預設樣式欄位
+                if (!projectData.defaultTemplate) projectData.defaultTemplate = { speaker: "無標籤", color: "#ffffff", size: "56", animation: "none" };
+            } else { throw new Error(); }
         } catch(e) {
             projectData = {
-                currentScene: "場景 A：畢業生致詞",
-                speakers: ["無標籤", "畢業生代表", "在校生代表", "校長", "家長會長", "特別貴賓"],
+                currentScene: "場景 A：畢業生致詞", speakers: ["無標籤", "畢業生代表", "在校生代表", "校長", "家長會長", "特別貴賓"],
+                defaultTemplate: { speaker: "無標籤", color: "#ffffff", size: "56", animation: "none" },
                 scenes: {
-                    "場景 A：畢業生致詞": [
-                        { id: 1, text: "親愛的師長、同學們，大家平安。", speaker: "畢業生代表", color: "#ffffff", size: "56", animation: "slide" }
-                    ],
-                    "場景 B：在校生致詞": [
-                        { id: 2, text: "展翅高飛吧！學長學姐們！", speaker: "在校生代表", color: "#ffeb3b", size: "60", animation: "fade" }
-                    ],
+                    "場景 A：畢業生致詞": [{ id: 1, text: "親愛的師長、同學們，大家平安。", speaker: "畢業生代表", color: "#ffffff", size: "56", animation: "slide" }],
+                    "場景 B：在校生致詞": [{ id: 2, text: "展翅高飛吧！學長學姐們！", speaker: "在校生代表", color: "#ffeb3b", size: "60", animation: "fade" }],
                     "場景 C：校長及貴賓致詞": []
                 }
             };
         }
 
         let editId = null;
+        let currentInputCallback = null;
 
-        // ✨ 自訂全域彈出視窗函式 (取代 alert 和 confirm)
-        // options 格式: { title: "標題", message: "內容", isConfirm: true/false, onConfirm: 回呼函式 }
         function showSystemModal(options) {
             document.getElementById('alertTitle').innerText = options.title || "系統提示";
             document.getElementById('alertMessage').innerText = options.message || "";
-            
             const btnContainer = document.getElementById('alertBtnContainer');
-            btnContainer.innerHTML = ""; // 清空舊按鈕
-            
+            btnContainer.innerHTML = "";
             if (options.isConfirm) {
-                // 如果是 Confirm 模式 (有取消與確定)
-                const cancelBtn = document.createElement('button');
-                cancelBtn.className = "btn";
-                cancelBtn.innerText = "取消";
-                cancelBtn.onclick = () => { document.getElementById('alertModalOverlay').style.display = 'none'; };
-                
-                const confirmBtn = document.createElement('button');
-                confirmBtn.className = "btn";
-                confirmBtn.style.background = options.isDanger ? "var(--danger-color)" : "var(--accent-color)";
-                confirmBtn.style.borderColor = options.isDanger ? "var(--danger-color)" : "var(--accent-color)";
-                confirmBtn.innerText = "確定";
-                confirmBtn.onclick = () => {
-                    document.getElementById('alertModalOverlay').style.display = 'none';
-                    if (typeof options.onConfirm === 'function') options.onConfirm();
-                };
-                
-                btnContainer.appendChild(cancelBtn);
-                btnContainer.appendChild(confirmBtn);
+                const cancelBtn = document.createElement('button'); cancelBtn.className = "btn"; cancelBtn.innerText = "取消"; cancelBtn.onclick = () => { document.getElementById('alertModalOverlay').style.display = 'none'; };
+                const confirmBtn = document.createElement('button'); confirmBtn.className = "btn"; confirmBtn.style.background = options.isDanger ? "var(--danger-color)" : "var(--accent-color)"; confirmBtn.style.borderColor = options.isDanger ? "var(--danger-color)" : "var(--accent-color)"; confirmBtn.innerText = "確定";
+                confirmBtn.onclick = () => { document.getElementById('alertModalOverlay').style.display = 'none'; if (options.onConfirm) options.onConfirm(); };
+                btnContainer.appendChild(cancelBtn); btnContainer.appendChild(confirmBtn);
             } else {
-                // 如果是 Alert 模式 (只有確認)
-                const okBtn = document.createElement('button');
-                okBtn.className = "btn";
-                okBtn.style.background = "var(--accent-color)";
-                okBtn.style.borderColor = "var(--accent-color)";
-                okBtn.style.padding = "8px 24px";
-                okBtn.innerText = "好";
-                okBtn.onclick = () => { document.getElementById('alertModalOverlay').style.display = 'none'; };
+                const okBtn = document.createElement('button'); okBtn.className = "btn"; okBtn.style.background = "var(--accent-color)"; okBtn.style.borderColor = "var(--accent-color)"; okBtn.innerText = "好"; okBtn.onclick = () => { document.getElementById('alertModalOverlay').style.display = 'none'; };
                 btnContainer.appendChild(okBtn);
             }
-            
             document.getElementById('alertModalOverlay').style.display = 'flex';
         }
 
-        function toggleMenu(event, element) {
-            event.stopPropagation();
-            const isShown = element.classList.contains('show');
-            closeAllMenus();
-            if (!isShown) {
-                element.classList.add('show');
-            }
+        // 用於替換內建 prompt 的系統視窗
+        function showInputModal(title, placeholder, onSubmit) {
+            document.getElementById('inputModalTitle').innerText = title;
+            const input = document.getElementById('customInputVal');
+            input.value = ""; input.placeholder = placeholder;
+            document.getElementById('inputModalOverlay').style.display = 'flex';
+            currentInputCallback = onSubmit;
+            document.getElementById('inputModalSubmitBtn').onclick = () => {
+                const val = document.getElementById('customInputVal').value;
+                if(currentInputCallback) currentInputCallback(val);
+                closeInputModal();
+            };
         }
+        function closeInputModal() { document.getElementById('inputModalOverlay').style.display = 'none'; }
 
-        function closeAllMenus() {
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('show');
-            });
-        }
-
-        document.addEventListener('click', function() {
-            closeAllMenus();
-        });
-
-        function saveToStorage() {
-            try {
-                localStorage.setItem('ceremony_project', JSON.stringify(projectData));
-            } catch (e) {
-                console.error("儲存失敗", e);
-            }
-        }
+        function toggleMenu(event, element) { event.stopPropagation(); const isShown = element.classList.contains('show'); closeAllMenus(); if (!isShown) element.classList.add('show'); }
+        function closeAllMenus() { document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('show')); }
+        document.addEventListener('click', closeAllMenus);
+        function saveToStorage() { try { localStorage.setItem('ceremony_project', JSON.stringify(projectData)); } catch (e) {} }
 
         function renderSceneMenu() {
             const dropdown = document.getElementById('sceneDropdown');
-            if(!dropdown) return;
-            dropdown.innerHTML = '';
-
+            if(!dropdown) return; dropdown.innerHTML = '';
             Object.keys(projectData.scenes).forEach(sceneName => {
                 const li = document.createElement('li');
-                li.innerText = sceneName;
-                li.onclick = (e) => {
-                    e.stopPropagation();
-                    switchScene(sceneName);
-                    closeAllMenus();
-                };
-                dropdown.appendChild(li);
+                li.innerHTML = `<span>${sceneName}</span>`;
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-delete-scene'; delBtn.innerText = '✕';
+                delBtn.onclick = (e) => { e.stopPropagation(); deleteScene(sceneName); };
+                
+                li.onclick = (e) => { e.stopPropagation(); switchScene(sceneName); closeAllMenus(); };
+                li.appendChild(delBtn); dropdown.appendChild(li);
             });
-
-            const divider = document.createElement('div');
-            divider.className = 'menu-divider';
-            dropdown.appendChild(divider);
-
-            const addLi = document.createElement('li');
-            addLi.className = 'menu-action';
-            addLi.innerText = '＋ 新增自訂場景...';
-            addLi.onclick = (e) => {
-                e.stopPropagation();
-                addNewScene();
-            };
+            const divider = document.createElement('div'); divider.className = 'menu-divider'; dropdown.appendChild(divider);
+            const addLi = document.createElement('li'); addLi.className = 'menu-action'; addLi.innerText = '＋ 新增自訂場景...';
+            addLi.onclick = (e) => { e.stopPropagation(); addNewScene(); };
             dropdown.appendChild(addLi);
         }
 
+        // 用 CSS Modal 替換原本的 prompt 新增場景
         function addNewScene() {
-            const newSceneName = prompt('請輸入新場景名稱：'); // 註：Prompt因牽涉到打字暫不更動
-            if (!newSceneName || newSceneName.trim() === '') return;
-            
-            if (projectData.scenes[newSceneName]) {
-                showSystemModal({ title: "名稱重複", message: "此場景名稱已存在！", isConfirm: false });
-                return;
-            }
-
-            projectData.scenes[newSceneName] = [];
-            projectData.currentScene = newSceneName;
-            
-            saveToStorage(); 
-            renderSceneMenu();
-            renderList();
             closeAllMenus();
-        }
-
-        function populateSpeakerSelect() {
-            const select = document.getElementById('subSpeakerSelect');
-            if(!select) return;
-            select.innerHTML = '';
-
-            projectData.speakers.forEach(speaker => {
-                const opt = document.createElement('option');
-                opt.value = speaker;
-                opt.innerText = speaker;
-                select.appendChild(opt);
-            });
-
-            const optAdd = document.createElement('option');
-            optAdd.value = "__ADD_NEW__";
-            optAdd.innerText = "＋ 新增自訂標籤...";
-            optAdd.style.color = "#a5b4fc";
-            select.appendChild(optAdd);
-        }
-
-        function handleSpeakerSelectChange() {
-            const select = document.getElementById('subSpeakerSelect');
-            if (select.value === "__ADD_NEW__") {
-                const newSpeaker = prompt('請輸入新講者標籤名稱：');
-                if (newSpeaker && newSpeaker.trim() !== '') {
-                    if (!projectData.speakers.includes(newSpeaker)) {
-                        projectData.speakers.push(newSpeaker);
-                        saveToStorage(); 
-                    }
-                    populateSpeakerSelect();
-                    select.value = newSpeaker;
-                } else {
-                    select.value = "無標籤";
+            showInputModal('新增自訂場景', '請輸入新場景名稱...', (newSceneName) => {
+                if (!newSceneName || newSceneName.trim() === '') return;
+                if (projectData.scenes[newSceneName]) {
+                    showSystemModal({ title: "名稱重複", message: "此場景名稱已存在！" }); return;
                 }
+                projectData.scenes[newSceneName] = []; projectData.currentScene = newSceneName;
+                saveToStorage(); renderSceneMenu(); renderList();
+            });
+        }
+
+        function deleteScene(sceneName) {
+            closeAllMenus();
+            const totalScenes = Object.keys(projectData.scenes);
+            if(totalScenes.length <= 1) {
+                showSystemModal({ title: "無法刪除", message: "專案內必須至少保留一個場景！" }); return;
             }
-            updateLivePreview();
+            showSystemModal({
+                title: "確認刪除場景", message: `確定要刪除整個「${sceneName}」以及裡面的所有字幕嗎？`, isConfirm: true, isDanger: true,
+                onConfirm: () => {
+                    delete projectData.scenes[sceneName];
+                    if(projectData.currentScene === sceneName) { projectData.currentScene = Object.keys(projectData.scenes)[0]; }
+                    saveToStorage(); renderSceneMenu(); renderList();
+                }
+            });
+        }
+
+        // target 可以是 'main' (主新增視窗) 或 'default' (預設格式視窗)
+        function populateSpeakerSelect(target = 'main') {
+            const selectId = target === 'main' ? 'subSpeakerSelect' : 'defaultSpeakerSelect';
+            const select = document.getElementById(selectId);
+            if(!select) return; select.innerHTML = '';
+            projectData.speakers.forEach(speaker => {
+                const opt = document.createElement('option'); opt.value = speaker; opt.innerText = speaker; select.appendChild(opt);
+            });
+            const optAdd = document.createElement('option'); optAdd.value = "__ADD_NEW__"; optAdd.innerText = "＋ 新增自訂標籤..."; optAdd.style.color = "#a5b4fc"; select.appendChild(optAdd);
+        }
+
+        // 用 CSS Modal 替換原本的 prompt 新增講者標籤
+        function handleSpeakerSelectChange(target = 'main') {
+            const selectId = target === 'main' ? 'subSpeakerSelect' : 'defaultSpeakerSelect';
+            const select = document.getElementById(selectId);
+            if (select.value === "__ADD_NEW__") {
+                showInputModal('新增自訂標籤', '請輸入講者職稱/姓名...', (newSpeaker) => {
+                    if (newSpeaker && newSpeaker.trim() !== '') {
+                        if (!projectData.speakers.includes(newSpeaker)) { projectData.speakers.push(newSpeaker); saveToStorage(); }
+                        populateSpeakerSelect('main');
+                        populateSpeakerSelect('default');
+                        select.value = newSpeaker;
+                    } else { select.value = "無標籤"; }
+                    if (target === 'main') updateLivePreview();
+                });
+            } else {
+                if (target === 'main') updateLivePreview();
+            }
         }
 
         function renderList() {
             if (!projectData.scenes[projectData.currentScene]) {
-                const availableScenes = Object.keys(projectData.scenes);
-                if (availableScenes.length > 0) {
-                    projectData.currentScene = availableScenes[0];
-                } else {
-                    projectData.scenes["預設場景"] = [];
-                    projectData.currentScene = "預設場景";
-                }
+                projectData.currentScene = Object.keys(projectData.scenes)[0] || "預設場景";
+                if(!projectData.scenes[projectData.currentScene]) projectData.scenes[projectData.currentScene] = [];
             }
-
             document.getElementById('currentSceneDisplay').innerText = `目前場景：${projectData.currentScene}`;
             const listEl = document.getElementById('subtitleList');
-            if(!listEl) return;
-            listEl.innerHTML = '';
-            
+            if(!listEl) return; listEl.innerHTML = '';
             const currentSubtitles = projectData.scenes[projectData.currentScene] || [];
-
             currentSubtitles.forEach((sub, index) => {
-                const item = document.createElement('div');
-                item.className = 'subtitle-item';
-                
-                const speakerDisplay = (sub.speaker && sub.speaker !== "無標籤") 
-                    ? `<div class="speaker-badge">👤 ${sub.speaker}</div>` 
-                    : `<div class="speaker-badge" style="background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.4)">無標籤</div>`;
-
-                item.innerHTML = `
-                    <div>
-                        ${speakerDisplay}
-                        <div style="color:${sub.color}; font-size:18px; font-weight:500;">${sub.text}</div>
-                    </div>
+                const item = document.createElement('div'); item.className = 'subtitle-item';
+                const speakerDisplay = (sub.speaker && sub.speaker !== "無標籤") ? `<div class="speaker-badge">👤 ${sub.speaker}</div>` : `<div class="speaker-badge" style="background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.4)">無標籤</div>`;
+                item.innerHTML = `<div>${speakerDisplay}<div style="color:${sub.color}; font-size:18px; font-weight:500;">${sub.text}</div></div>
                     <div>
                         <button class="btn btn-live" onclick="event.stopPropagation(); sendToLive(${index})">放送</button>
                         <button class="btn" onclick="event.stopPropagation(); editSubtitle(${sub.id})">編輯</button>
                         <button class="btn" style="background:rgba(255,0,0,0.2); border-color: rgba(255,0,0,0.3);" onclick="event.stopPropagation(); deleteSubtitle(${sub.id}, '${sub.text}')">刪除</button>
-                    </div>
-                `;
+                    </div>`;
                 listEl.appendChild(item);
             });
         }
 
-        function switchScene(sceneName) {
-            projectData.currentScene = sceneName;
-            saveToStorage(); 
-            renderList();
-        }
-
-        function exportProject() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `完整典禮字幕專案檔.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            closeAllMenus();
-        }
-
+        function switchScene(sceneName) { projectData.currentScene = sceneName; saveToStorage(); renderList(); }
+        function exportProject() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2)); const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", `典禮字幕專案檔.json`); document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove(); closeAllMenus(); }
         function importProject(event) {
-            const fileInput = event.target;
-            const file = fileInput.files[0];
-            if (!file) return;
-            
+            const fileInput = event.target; const file = fileInput.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (parsed.scenes) {
                         if(!parsed.speakers) parsed.speakers = ["無標籤", "畢業生代表", "在校生代表", "校長"];
-                        if(!parsed.currentScene) parsed.currentScene = Object.keys(parsed.scenes)[0] || "預設場景";
-                        projectData = parsed;
-                        saveToStorage(); 
-                        renderSceneMenu();
-                        renderList();
-                        showSystemModal({ title: "成功", message: "整份專案已完美匯入並儲存！", isConfirm: false });
-                    } else {
-                        showSystemModal({ title: "錯誤", message: "檔案格式不正確。", isConfirm: false });
-                    }
-                } catch (err) {
-                    showSystemModal({ title: "失敗", message: "讀取檔案失敗。", isConfirm: false });
-                }
+                        if(!parsed.defaultTemplate) parsed.defaultTemplate = { speaker: "無標籤", color: "#ffffff", size: "56", animation: "none" };
+                        projectData = parsed; saveToStorage(); renderSceneMenu(); renderList();
+                        showSystemModal({ title: "成功", message: "字幕檔已匯入完成並儲存！" });
+                    } else { showSystemModal({ title: "錯誤", message: "檔案格式不正確。" }); }
+                } catch (err) { showSystemModal({ title: "失敗", message: "讀取檔案失敗。" }); }
                 fileInput.value = "";
             };
-            reader.readAsText(file);
-            closeAllMenus();
+            reader.readAsText(file); closeAllMenus();
         }
 
         function updateLivePreview() {
-            const text = document.getElementById('subText').value || "（請輸入文字）";
-            const speaker = document.getElementById('subSpeakerSelect').value;
-            const color = document.getElementById('subColor').value;
-            const size = document.getElementById('subSize').value;
-
-            document.getElementById('fontSizeVal').innerText = size;
-            document.getElementById('preSpeaker').innerText = (speaker && speaker !== "無標籤") ? `【 ${speaker} 】` : '';
-            document.getElementById('preText').innerText = text;
-            document.getElementById('preText').style.color = color;
-            document.getElementById('preText').style.fontSize = (size * 0.45) + 'px';
+            const text = document.getElementById('subText').value || "（請輸入文字）"; const speaker = document.getElementById('subSpeakerSelect').value; const color = document.getElementById('subColor').value; const size = document.getElementById('subSize').value;
+            document.getElementById('fontSizeVal').innerText = size; document.getElementById('preSpeaker').innerText = (speaker && speaker !== "無標籤") ? `【 ${speaker} 】` : '';
+            document.getElementById('preText').innerText = text; document.getElementById('preText').style.color = color; document.getElementById('preText').style.fontSize = (size * 0.45) + 'px';
         }
 
+        // 開啟新增/編輯視窗 (如果是全新新增，會直接讀取設定好的預設格式)
         function openModal() {
-            editId = null;
-            populateSpeakerSelect();
+            editId = null; populateSpeakerSelect('main');
             document.getElementById('modalTitle').innerText = "新增字幕項目";
             document.getElementById('subText').value = "";
-            document.getElementById('subSpeakerSelect').value = "無標籤";
-            document.getElementById('subColor').value = "#ffffff";
-            document.getElementById('subSize').value = "56";
-            document.getElementById('subAnimation').value = "none";
+            
+            // 帶入預設樣式樣板
+            const tpl = projectData.defaultTemplate || { speaker: "無標籤", color: "#ffffff", size: "56", animation: "none" };
+            document.getElementById('subSpeakerSelect').value = projectData.speakers.includes(tpl.speaker) ? tpl.speaker : "無標籤";
+            document.getElementById('subColor').value = tpl.color || "#ffffff";
+            document.getElementById('subSize').value = tpl.size || "56";
+            document.getElementById('subAnimation').value = tpl.animation || "none";
+            
             document.getElementById('modalOverlay').style.display = 'flex';
             updateLivePreview();
         }
-
         function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
 
+        /* ✨ 預設格式視窗控制邏輯區 */
+        function openDefaultConfigModal() {
+            populateSpeakerSelect('default');
+            const tpl = projectData.defaultTemplate || { speaker: "無標籤", color: "#ffffff", size: "56", animation: "none" };
+            document.getElementById('defaultSpeakerSelect').value = projectData.speakers.includes(tpl.speaker) ? tpl.speaker : "無標籤";
+            document.getElementById('defaultColor').value = tpl.color || "#ffffff";
+            document.getElementById('defaultSize').value = tpl.size || "56";
+            document.getElementById('defaultFontSizeVal').innerText = tpl.size || "56";
+            document.getElementById('defaultAnimation').value = tpl.animation || "none";
+            document.getElementById('defaultConfigOverlay').style.display = 'flex';
+        }
+        function closeDefaultConfigModal() { document.getElementById('defaultConfigOverlay').style.display = 'none'; }
+        function saveDefaultConfig() {
+            projectData.defaultTemplate = {
+                speaker: document.getElementById('defaultSpeakerSelect').value,
+                color: document.getElementById('defaultColor').value,
+                size: document.getElementById('defaultSize').value,
+                animation: document.getElementById('defaultAnimation').value
+            };
+            saveToStorage();
+            closeDefaultConfigModal();
+            showSystemModal({ title: "設定成功", message: "預設新增格式已更新！未來點擊「新增字幕」將會自動套用此格式。" });
+        }
+
         function saveSubtitle() {
-            const text = document.getElementById('subText').value;
-            const speaker = document.getElementById('subSpeakerSelect').value;
-            const color = document.getElementById('subColor').value;
-            const size = document.getElementById('subSize').value;
-            const animation = document.getElementById('subAnimation').value;
-
-            if(!text) {
-                showSystemModal({ title: "輸入空值", message: "字幕內容不能為空！", isConfirm: false });
-                return;
-            }
-
-            if(!projectData.scenes[projectData.currentScene]) {
-                projectData.scenes[projectData.currentScene] = [];
-            }
+            const text = document.getElementById('subText').value; const speaker = document.getElementById('subSpeakerSelect').value; const color = document.getElementById('subColor').value; const size = document.getElementById('subSize').value; const animation = document.getElementById('subAnimation').value;
+            if(!text) { showSystemModal({ title: "輸入空值", message: "字幕內容不能為空！" }); return; }
+            if(!projectData.scenes[projectData.currentScene]) projectData.scenes[projectData.currentScene] = [];
             const currentSubtitles = projectData.scenes[projectData.currentScene];
-
-            if(editId) {
-                const sub = currentSubtitles.find(s => s.id === editId);
-                if(sub) Object.assign(sub, { text, speaker, color, size, animation });
-            } else {
-                currentSubtitles.push({ id: Date.now(), text, speaker, color, size, animation });
-            }
-            
-            saveToStorage(); 
-            renderList();
-            closeModal();
+            if(editId) { const sub = currentSubtitles.find(s => s.id === editId); if(sub) Object.assign(sub, { text, speaker, color, size, animation }); }
+            else { currentSubtitles.push({ id: Date.now(), text, speaker, color, size, animation }); }
+            saveToStorage(); renderList(); closeModal();
         }
 
         function editSubtitle(id) {
-            const currentSubtitles = projectData.scenes[projectData.currentScene] || [];
-            const sub = currentSubtitles.find(s => s.id === id);
-            if(!sub) return;
-            
-            editId = id;
-            
-            populateSpeakerSelect();
-            if(!projectData.speakers.includes(sub.speaker)){
-                projectData.speakers.push(sub.speaker);
-                populateSpeakerSelect();
-            }
-
-            document.getElementById('modalTitle').innerText = "編輯字幕項目";
-            document.getElementById('subText').value = sub.text;
-            document.getElementById('subSpeakerSelect').value = sub.speaker || "無標籤";
-            document.getElementById('subColor').value = sub.color;
-            document.getElementById('subSize').value = sub.size;
-            document.getElementById('subAnimation').value = sub.animation;
-            document.getElementById('modalOverlay').style.display = 'flex';
-            updateLivePreview();
+            const currentSubtitles = projectData.scenes[projectData.currentScene] || []; const sub = currentSubtitles.find(s => s.id === id); if(!sub) return;
+            editId = id; populateSpeakerSelect('main');
+            if(!projectData.speakers.includes(sub.speaker)){ projectData.speakers.push(sub.speaker); populateSpeakerSelect('main'); }
+            document.getElementById('modalTitle').innerText = "編輯字幕項目"; document.getElementById('subText').value = sub.text; document.getElementById('subSpeakerSelect').value = sub.speaker || "無標籤"; document.getElementById('subColor').value = sub.color; document.getElementById('subSize').value = sub.size; document.getElementById('subAnimation').value = sub.animation; document.getElementById('modalOverlay').style.display = 'flex'; updateLivePreview();
         }
 
-        // ✨ 修正重點：改用自訂的 CSS 確認視窗（Confirm Modal）
         function deleteSubtitle(id, text) {
             showSystemModal({
-                title: "確認刪除",
-                message: `是否要刪除「${text}」？`,
-                isConfirm: true,
-                isDanger: true,
-                onConfirm: function() {
-                    projectData.scenes[projectData.currentScene] = (projectData.scenes[projectData.currentScene] || []).filter(s => s.id !== id);
-                    saveToStorage(); 
-                    renderList();
-                }
+                title: "確認刪除", message: `是否要刪除「${text}」？`, isConfirm: true, isDanger: true,
+                onConfirm: function() { projectData.scenes[projectData.currentScene] = (projectData.scenes[projectData.currentScene] || []).filter(s => s.id !== id); saveToStorage(); renderList(); }
             });
         }
 
-        function sendToLive(index) {
-            const sub = projectData.scenes[projectData.currentScene][index];
-            if(sub) channel.postMessage({ type: 'UPDATE_SUBTITLE', data: sub });
-        }
-
+        function sendToLive(index) { const sub = projectData.scenes[projectData.currentScene][index]; if(sub) channel.postMessage({ type: 'UPDATE_SUBTITLE', data: sub }); }
         function clearAllLive() { channel.postMessage({ type: 'CLEAR' }); }
 
         function uploadBackground(event) {
             const file = event.target.files[0];
             if (file) {
+                document.getElementById('bgFileNameDisplay').innerText = file.name;
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    channel.postMessage({ type: 'UPDATE_BG', data: e.target.result });
-                };
+                reader.onload = function(e) { channel.postMessage({ type: 'UPDATE_BG', data: e.target.result }); };
                 reader.readAsDataURL(file);
             }
         }
